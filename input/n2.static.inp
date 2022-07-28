@@ -1,0 +1,24 @@
+nel = 14
+nrspf = 2
+nrorb = 8
+inigrd  = 2
+restart = 0
+aucofu  = 0
+numthreads = 8
+tfin0 = 0.2
+tout0 = 0.1
+N1 = 7.0
+N2 = 7.0
+A1N = 7.0
+A2N = 7.0
+@chars
+compound = N2
+intpath = integrals_N2-bf56
+itimeprop = yes
+autoshifte = yes
+read_stand = no
+logev = no
+logwavef = yes
+@pulseparams
+lph lpw0 lfreq  x    y     z
+0.0  0.0  0.0   0.0  0.0  1.0

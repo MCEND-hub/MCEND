@@ -1,0 +1,24 @@
+nel = 6
+nrspf = 1
+nrorb = 4
+inigrd  = 2
+basis   = 1
+restart = 0
+aucofu  = 0
+numthreads = 1
+tfin0 = 0.005
+tout0 = 0.001
+N1 = 3.0
+N2 = 3.0
+@chars
+compound = Li2
+intpath = integrals_Li2-bf45_v8
+itimeprop = no
+autoshifte = yes
+read_stand = no
+polardim = z
+logev = no
+logwavef = yes
+@pulseparams
+lph lpw0 lfreq  x    y     z
+0.0  0.0  0.0   0.0  0.0  1.0

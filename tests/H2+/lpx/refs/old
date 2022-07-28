@@ -1,0 +1,999 @@
+      subroutine initwavefunc()
+
+        implicit none
+  !      complex(dp) :: phin(nrprimn,nrspf), phi(nrprime,nrorb)
+  !      real(dp)    :: r(nrprimn)
+  !      real(dp)    :: kx(nrprimn)
+  !      integer     :: detl(nrindep*nel)
+  !      complex(dp) :: A(nrindep*nrspf)
+  !      complex(dp) :: rhon(nrspf,nrspf)
+  !      real(dp)    :: temp, temp2
+  !      complex(dp) :: projP(nrprimn,nrprimn)
+        complex(dp) :: olap
+        complex(dp) :: auxphin(nrprimn), auxphin2(nrprimn), auxphin3(nrprimn)
+        complex(dp), allocatable :: projP(:,:)
+        !real(dp)     :: rnuc, myx
+        real(dp)     :: work(3*nrprime), w(nrprime)!, facto
+        real(dp)     :: workn(3*nrprimn), wn(nrprimn)
+        real(dp)     :: norm
+        real(dp)     :: norm_spinorbital
+        real(dp)     :: h2(nrprime,nrprime)
+        real(dp)     :: hnuc(nrprimn,nrprimn)
+        real(dp)     :: rep(nrorb), imp(nrorb), rea, ima
+        real(dp)     :: rep_spinorbital(nrorb_spinorbital),imp_spinorbital(nrorb_spinorbital), rea_spinorbital, ima_spinorbital
+        !real(dp)     :: polynomfit
+        integer(i64) :: planf, planb
+        !integer      :: counter_phi_spinorbital
+        integer      :: mu, nu, in, ix, jx
+        integer      :: i, j !, k, l, m, n
+        integer      :: scfvals
+        !integer      :: ios, iensp
+        integer      :: fftw_forward=-1,fftw_backward=1
+        integer      :: info, lwork
+        integer      :: spsi
+        integer      :: init_coef_A, sum_sz_tmp, detl_spinorbital_count, nel_count, flag_print
+       ! integer      :: sum_sz_detl_spinorbital(nrindep_spinorbital)
+
+        character(3) :: jobz, uplo, ncol
+        character(3) :: nnn !nrow,
+
+  !      call dfftw_plan_dft_1d(planf,nrprimn,auxphin,auxphin2,fftw_forward,0)
+  !      call dfftw_plan_dft_1d(planb,nrprimn,auxphin2,auxphin3,fftw_backward,0)
+
+        !> is this a full restart? If yes, read in the startpsi
+
+
+
+        write (*,*) 'nsz in begining of initwavefunc', nsz
+
+        !Jan-28
+        write (*,*) 'check restart', restart
+        write (*,*) 'check  nrorb',  nrorb !nrorb,
+
+        if (restart == 2 .or. restart == 5) then
+
+  !May-17
+  !        write(nnn,'(i2)') 2*nrorb
+  !        write(nnn,'(i2)') 2*nrorb
+          nnn = stri(2*nrorb)
+          write (*,*) 'read spatial'
+
+
+          if (flag_spinorbital==0) then
+
+
+            open(newunit=spsi,file="startpsi")
+            do i=1, nrindep*nrspf
+              read(spsi,*) rea, ima
+              A(i) = dcmplx(rea,ima)
+            end do
+
+            write (*,*) 'read spsi'
+
+            do mu=1, nrprime
+  !          read(20,'('//nnn//'(e23.16,1x))') (rep(in),in=1,nrorb), (imp(in),in=1,nrorb)
+  !          read(20,'('//nnn//'(e23.16,1x))') (rep(in),in=1,nrorb), (imp(in),in=1,nrorb)
+              read(spsi,'('//stri(2*nrorb)//'(e23.16,1x))') (rep(in),in=1,nrorb), (imp(in),in=1,nrorb)
+  !        do in=1, nrorb
+              do in=1, nrorb
+                phi(mu,in) = dcmplx(rep(in),imp(in))
+              enddo
+            enddo
+
+            write(ncol,'(i1)') 2*nrspf
+
+            do ix=1, nrprimn
+  !          read(20,'('//ncol//'(e23.16,1x))') (rep(in),in=1,nrspf), (imp(in),in=1,nrspf)
+
+              !write (*,*) 'ix', ix, nrprimn
+
+              read(spsi,'('//stri(2*nrspf)//'(e23.16,1x))') (rep(in),in=1,nrspf), (imp(in),in=1,nrspf)
+
+              !write (*,*) 'rep(in)', rep
+              !write (*,*) 'imp(in)', imp
+
+              do in=1, nrspf
+                phin(ix,in) = dcmplx(rep(in),imp(in))
+              enddo
+            enddo
+
+          !write (*,*) 'close spsi-0'
+            close(spsi)
+
+          else if (flag_spinorbital==1) then
+
+            write (*,*) 'start spinorbital-0'
+
+            open(newunit=spsi,file="startpsi_spinorbital")
+
+            write (*,*) 'start spinorbital'
+            write (*,*) 'summary of dimension'
+            write (*,*) 'A', nrindep_spinorbital, nrspf, nrindep_spinorbital*nrspf
+            write (*,*) 'phie nrorb_spinorbital nrprime', nrorb_spinorbital, nrprime
+            write (*,*) 'phin nrspf nrprimn', nrspf, nrprimn
+
+            do i=1, nrindep_spinorbital*nrspf
+              read(spsi,*) rea_spinorbital, ima_spinorbital
+              A_spinorbital(i) = dcmplx(rea_spinorbital,ima_spinorbital)
+            end do
+
+
+            write (*,*) nrindep, nrindep_spinorbital, nrorb, nrorb_spinorbital
+            write (*,*) 'read spsi-spinorbital after A', nrorb_spinorbital
+
+            do mu=1, nrprime
+  !          read(20,'('//nnn//'(e23.16,1x))') (rep(in),in=1,nrorb), (imp(in),in=1,nrorb)
+  !          read(20,'('//nnn//'(e23.16,1x))') (rep(in),in=1,nrorb), (imp(in),in=1,nrorb)
+
+              write (*,*) 'mu', mu, nrprimn
+              write (*,*) 'rep_spinorbital(in)', rep_spinorbital
+              write (*,*) 'imp_spinorbital(in)', imp_spinorbital
+
+
+              read(spsi,'('//stri(nrorb_spinorbital)//'(e23.16,1x))') (rep_spinorbital(in),in=1,nrorb_spinorbital)
+              write (*,*) 'p1', rep_spinorbital
+
+
+              read(spsi,'('//stri(nrorb_spinorbital)//'(e23.16,1x))') (imp_spinorbital(in),in=1,nrorb_spinorbital)
+              write (*,*) 'p2',imp_spinorbital
+
+  !        do in=1, nrorb
+              do in=1, nrorb_spinorbital
+
+                write (*,*) 'in', in
+                phi_spinorbital(mu,in) = dcmplx(rep_spinorbital(in),imp_spinorbital(in))
+              enddo
+            enddo
+
+            write(ncol,'(i1)') 2*nrspf
+            write (*,*) 'read phi_spinorbital after A-2',nrprimn
+
+            do ix=1, nrprimn
+  !          read(20,'('//ncol//'(e23.16,1x))') (rep(in),in=1,nrspf), (imp(in),in=1,nrspf)
+
+              write (*,*) 'ix', ix, nrprimn
+              write (*,*) 'rep_spinorbital(in)', rep_spinorbital
+              write (*,*) 'imp_spinorbital(in)', imp_spinorbital
+
+              !cw: May-18
+              !assume nrorb >= nrspf
+              read(spsi,'('//stri(2*nrspf)//'(e23.16,1x))') (rep_spinorbital(in),in=1,nrspf), (imp_spinorbital(in),in=1,nrspf)
+
+
+
+              do in=1, nrspf
+                phin(ix,in) = dcmplx(rep_spinorbital(in),imp_spinorbital(in))
+              enddo
+            enddo
+
+            write (*,*) 'read phi_spinorbital-3 after A'
+
+          !write (*,*) 'close spsi-0'
+            close(spsi)
+
+          else
+            write (*,*) 'flag_spinorbital not 0/1, supported'
+            stop
+          end if
+
+
+         ! write (*,*) 'read spsi-2'
+
+
+
+         ! write (*,*) 'read spsi-3'
+
+
+
+          !write (*,*) 'close spsi'
+
+
+  !      endif
+        ! end restart == 2
+
+        ! Jan-16
+        !> If this isn't a restart then initialize the wavefunction from the scf guess vals
+        ! Feb-4
+        else if (restart == 0) then
+        ! Jan-28
+        ! cw: do i need different string of A?
+          A(:) = c0
+         ! A_frzorb(:) = c0
+          ! prefactor of Slater-Determinant is 1
+          ! read-input.f90:  complex(dp), parameter :: c0 = (0.0_dp, 0.0_dp)
+          ! read-input.f90:20:  complex(dp), parameter :: cr = (1.0_dp, 0.0_dp)
+
+
+          !Apr-14 is this initilzation right? if 1st detl is not allowed by spin symmetry
+          A(1) = cr
+       !   A_frzorb(1) = cr
+
+          !>  now nuclear phi
+
+          if (nsz == 0) then
+            A(1) = cr
+         !   A_frzorb(1) = cr
+          end if
+
+
+
+          A_spinorbital(:) = c0
+          !A_spinorbital(1) = cr
+          !A_spinorbital(2) = cr
+
+
+          write (*,*) 'check nsz in init', nsz
+          !Apr-16 needs auto locating 2
+
+
+          !write (*,*) 'shape detl',shape(detl)
+          !write (*,*) 'shape detl spinorbital',shape(detl_spinorbital)
+
+          write (*,*) 'detl',detl
+          write (*,*) 'detl spinorbital',detl_spinorbital
+
+          write (*,*) 'nel', nel
+
+
+
+          sum_sz_tmp = 0
+          detl_spinorbital_count = 1
+          nel_count = 0
+          !pick up the first detl fits Sz
+          ! NEED TO CHECK IF OBEYS AUFBAU PRINCIPLE
+
+          if (flag_spinorbital == 1) then
+            do i = 1, nrindep_spinorbital*nel
+
+
+
+               nel_count = nel_count +1
+
+               if (mod(detl_spinorbital(i),2) == 0) then
+                 sum_sz_tmp = sum_sz_tmp - 1
+               else if (mod(detl_spinorbital(i),2) == 1) then
+                 sum_sz_tmp = sum_sz_tmp + 1
+               else
+                 write (*,*) 'error in mod 2'
+                 stop
+               end if
+
+
+            ! write (*,*) 'sum_sz_tmp',sum_sz_tmp, 'nsz', nsz
+            ! write (*,*) 'nel_count', nel_count, 'nel', nel
+
+               if (sum_sz_tmp == nsz .and. nel_count == nel)  then
+                 write (*,*) 'match v2', detl_spinorbital_count
+                 init_coef_A = detl_spinorbital_count
+                 exit
+               end if
+
+               if (mod(i,nel) == 0) then
+                 sum_sz_tmp = 0
+                 nel_count = 0
+                 detl_spinorbital_count = detl_spinorbital_count + 1
+               end if
+
+
+            end do
+
+          ! write (*,*) 'nsz', nsz
+          ! write (*,*) 'after locating init coef A', init_coef_A
+
+
+          !Apr-16 could be unified for nsz==0 case
+          !just to highlight nsz == 0
+            if (nsz == 0) then
+              A_spinorbital(1) = cr
+          !else if (nsz == 2) then
+            else
+            !A_spinorbital(2) = cr
+               A_spinorbital(init_coef_A) = cr
+          !else
+          !  write (*,*) 'other nsz value not supported yet!!'
+            end if
+
+          end if
+
+          !Apr-17
+
+
+
+
+
+          ! generalized option, read in SCF energies from run on each grid point
+  !        scfv_path = trim(intdir)//'/scf-guess-'//trim(cmpdname)//'.dat'
+          write (*,*) "scfv_path", scfv_path
+          ! e.g.,  basis_library/integrals_LiH-bf32_dz/scf-guess-LiH.dat
+          write (*,*) "scfvals", scfvals
+          open(newunit=scfvals, file=trim(scfv_path), status='old')
+
+
+          ! in init, we setup electronic Hamiltonian, now we set up nuclear part
+          do ix=1, nrprimn
+            do jx=1, nrprimn
+              hnuc(ix,jx) = 0.0_dp
+            enddo
+            !> obsolete non-generlized polynomial fit call
+  !        hnuc(ix,ix) = polynomfit(r(ix))
+            !> alternate, generalized routine
+            ! cw: read diagonal part as Vnn?
+            read(scfvals,*) hnuc(ix,ix)
+          enddo
+
+          close(scfvals)
+
+
+
+          write (*,*) 'test odd or even nrprimn', nrprimn, mod(nrprimn,2)
+
+          if (mod(nrprimn,2) == 0) then
+
+          ! add kinetic term for nuclear Hamiltonian
+          ! where is the nuclear-nuclear potential
+            write (*,*) 'enter even branch'
+            do ix=1, nrprimn
+              do jx=1, nrprimn
+                if (ix == jx) then
+                !> not sure where these equations come from -> something to do with the grid basis representation?
+                !  Tannor, quantum mechanics time-dependent perspective, p 307, 11.172
+                !> plotting it looks like a sine dvr?
+                  hnuc(ix,ix) = hnuc(ix,ix) + pi**2*(nrprimn**2 + 2)/(6.0_dp*massn*nrprimn**2*dr**2)
+                else
+                  hnuc(ix,jx) = ((-1.0_dp)**(ix - jx))*pi**2/((nrprimn*dr*dsin(dble(ix - jx)*pi/dble(nrprimn)))**2*massn)
+                endif
+              enddo
+            enddo
+
+          else
+            !write (*,*) 'enter odd branch'
+            do ix=1, nrprimn
+              do jx=1, nrprimn
+                if (ix == jx) then
+                !  Tannor, quantum mechanics time-dependent perspective, p 307, 11.172
+                !> plotting it looks like a sine dvr?
+                !not discreting from the center
+                  hnuc(ix,ix) = hnuc(ix,ix) + pi**2*(nrprimn**2 + 1)/(6.0_dp*massn*nrprimn**2*dr**2)
+                else
+                  hnuc(ix,jx) = ((-1.0_dp)**(ix - jx))*pi**2* dcos( dble(ix - jx)*pi/dble(nrprimn) ) &
+  & /((nrprimn*dr*dsin(dble(ix - jx)*pi/dble(nrprimn)))**2*massn)
+                endif
+              enddo
+            enddo
+
+
+          end if
+
+          jobz = "V"
+          uplo = "U"
+          lwork = 3*nrprimn
+
+          !Feb-13
+          !cw: if this is AO basis, spin is not included?
+          write (*,*) 'in hnuc', hnuc(1,1), hnuc(1,2)
+          ! jobz=V
+          ! uplo=U
+          ! nrprimn: read-input.f90:        nrprimn = dint(inpvars(i))
+          ! hnuc: core Hamiltonian return eigenvectors cw: will check
+          ! nrprimn: read-input.f90:        nrprimn = dint(inpvars(i))
+          ! w: eigenvalues array
+          ! work/lwork, not understood yet :(
+          ! no need to modify here for open-shell yet
+          call dsyev(jobz,uplo,nrprimn,hnuc,nrprimn,wn,workn,lwork,info)
+          write (*,*) 'out hnuc', hnuc(1,1), hnuc(1,2)
+
+          !> hmm, phin never seems to be given values before this,
+          !> is this problem if it tries to do a calculation using the whole matrix?
+          !> initilizing it with c0 had no effect
+          phin(:,:) = c0
+
+          do ix=1, nrprimn
+            do i=1, nrspf
+              phin(ix,i) = -hnuc(ix,i)
+              !Apr-17, seldom used phin_spinorbital
+              phin_spinorbital(ix,i) = -hnuc(ix,i)
+            enddo
+          enddo
+
+          do i=1, nrspf
+            norm = 0.0_dp
+            norm_spinorbital = 0.0_dp
+            do ix=1, nrprimn
+              norm             = norm + dconjg(phin(ix,i))*phin(ix,i)
+              norm_spinorbital = norm_spinorbital + dconjg(phin_spinorbital(ix,i))*phin_spinorbital(ix,i)
+
+            enddo
+            norm = dsqrt(norm*dr)
+            norm_spinorbital = dsqrt(norm_spinorbital*dr)
+            do ix=1, nrprimn
+              phin(ix,i) = phin(ix,i)/norm
+              phin_spinorbital(ix,i) = phin_spinorbital(ix,i)/norm_spinorbital
+            enddo
+          enddo
+          !> nuclear phin is filled
+
+
+          write (*,*)'compare norm and spinorbital', norm,norm_spinorbital
+          call compare_scalar_real(norm,norm_spinorbital)
+
+    ! check if inigrid and actual nuclear position are identical
+  !    if (basis == 1) then
+  !      inigrd = 1
+  !    if (basis == 2) then
+  !!      call calc_rhon(A,detl,rhon)
+  !      call calc_rhon()
+  !!      call get_nuc_pos(phin,rhon,r,rnuc)
+  !      call get_nuc_pos(rnuc)
+  !      write(*,*) "Found position ", rnuc
+  !      ix = 1
+  !      do while (r(ix) < rnuc)
+  !        ix = ix + 1
+  !      enddo
+  !      write(*,*) "Found grid point ", ix
+  !!      inigrd = ix
+  !      if (ix /= inigrd) then
+  !        write(*,*) "Initial grid point and atomic position not consistent!"
+  !        write(*,*) "Need to set initial grid point ",inigrd," to ",ix,"!"
+  !!        write(*,*) "Setting set initial grid point ",inigrd," to ",ix,"!"
+  !        write(*,*) "Aborting run..."
+  !        stop
+  !      endif
+  !    endif
+          ! cw: Feb-5
+          ! cw: Do I need nrprime_alpha/beta? seems nrprime is for Ven interpolation
+          ! cw: so far nrprime is in info-LiH.dat in integral directory
+          ! cw: it may wait for getting new integrals
+          ! cw: <mu, deti| Ven |detj, nv>
+          ! cw: perhaps not, points are in real space, setting alpha and beta the same
+          ! cw: but, hmat_alpha/hmat_beta?
+          !> now electronic phi
+          lwork = 3*nrprime
+          ! just for initialization? to set all values equal the inigrd-th one?
+          ! cw: do I need hmat-alpha/beta?
+          h2(:,:) = hmat(:,:,inigrd)
+
+          !write (*,*) 'check h2 before dsyev',jobz,uplo,nrprime !,phi !, nrorb, nrorb_alpha, nrorb_beta, nrorb_spinorbital
+          !write (*,*) phi(1,1)
+
+          do mu=1, nrprime/3
+            do nu=1, nrprime/3
+           !   write (*,*) mu,nu, h2(mu,nu)
+            end do
+          end do
+
+          !write (*,*) 'inigrd', inigrd, 'h2 test', h2(0,0)
+
+          ! jobz=V
+          ! uplo=U
+          ! read-input.f90:        nrprime = dint(inpvars(i)) order of matrix
+          ! h2: core Hamiltonian return eigenvectors
+          ! nrprime: dimension of eigenvector
+          ! w: eigenvalues array
+          ! work/lwork, not understood yet :(
+          call dsyev(jobz,uplo,nrprime,h2,nrprime,w,work,lwork,info)
+
+
+          write (*,*) 'check h2 after dsyev',jobz,uplo,nrprime !,phi !, nrorb, nrorb_alpha, nrorb_beta, nrorb_spinorbital
+          !write (*,*) phi(1,1)
+
+          do mu=1, nrprime/3
+            do nu=1, nrprime/3
+              write (*,*) mu,nu, h2(mu,nu)
+            end do
+          end do
+
+          !write (*,*) 'check dimension of h2', shape(h2)
+
+          do mu=1, nrprime
+          ! Feb-5
+          ! cw, not 2*nrorb?
+          ! in generic_data.f90
+          ! 125:        if (.not. allocated(phi))      allocate(phi(nrprime,nrorb))
+            do i=1, nrorb
+              !> I suppose if we wanted to keep virtuals we could compute a full nrprime x nrprime matrix
+              !> or in the case we want to swap orbitals around, which might need to happen
+              phi(mu,i) = h2(mu,i)
+
+              if ( mu == 1 .and. i==1) then
+                write (*,*) 'check mu i 11 phi and h2'
+                write (*,*) mu,i, phi(mu,i) , h2(mu,i)
+              end if
+
+            enddo
+          enddo
+
+          write (*,*) 'check phi nrorbs after dsyev' !,phi !, nrorb, nrorb_alpha, nrorb_beta, nrorb_spinorbital
+          !write (*,*) phi(1,1)
+
+          do mu=1, nrprime/3
+            do j=1, nrorb/3
+              write (*,*) mu,j, dreal(phi(mu,j))!, dreal(phi_spinorbital(mu,2*j-1)), dreal(phi_spinorbital(mu,2*j))
+            end do
+          end do
+      !>>> for open-shell is this neccessary?
+      !cw: try to generate spin orbital from initial guess
+
+          !nrorb_alpha = nrorb + 1
+          !nrorb_beta  = nrorb - 1
+          !norb_alpha  = nrorb_alpha
+          !norb_beta   = nrorb_beta
+
+          nrorb_init_alpha = nrorb_alpha !+ nsz/2
+          nrorb_init_beta  = nrorb_beta  ! - nsz/2
+
+          do mu=1, nrprime
+            do i=1, nrorb_init_alpha
+            ! Apr-20
+            ! we need to make sure the dimension of phi_alpha
+            ! otherwise it uses dimension of other variable
+              phi_alpha(mu,i) = h2(mu,i)
+
+              if ( mu == 1 .and. i==1) then
+                write (*,*) 'check mu i 11 phialpha and h2'
+                write (*,*) mu,i, phi_alpha(mu,i) , h2(mu,i)
+              end if
+
+            enddo
+          enddo
+  !
+          do mu=1, nrprime
+            do i=1, nrorb_init_beta
+              phi_beta(mu,i) = h2(mu,i)
+            enddo
+          enddo
+
+      !cw: Feb-27, need for phi_spinorbital
+      !    Assume 1. nrorb_alpha >= nrorb_beta
+      !           2. nrprime     >= nrorb
+
+     ! counter_phi_spinorbital = 0
+
+        write (*,*) 'check alpha beta in initial guess', nrorb_init_alpha, nrorb_init_beta
+
+          write (*,*) 'check phi nrorbs 2nd' !phi !, nrorb, nrorb_alpha, nrorb_beta, nrorb_spinorbital
+          write (*,*) phi(1,1), dreal(phi(1,1))
+
+
+
+
+          do mu=1, nrprime
+            do i=1, nrorb_init_beta
+               phi_spinorbital(mu,(2*i-1) )   = h2(mu,i)
+               phi_spinorbital(mu,2*i)        = h2(mu,i)
+            enddo
+            !Apr-13
+          !  do i = 2 * nrorb_beta + 1, nrorb
+          !  do i = 2 * nrorb_init_beta + 1, nrorb_spinorbital
+
+          ! May-8 cancelled
+          !  do i = 2 * nrorb_init_beta + 1, nrorb_init_alpha
+          !     phi_spinorbital(mu,i)   = h2(mu,i)
+          !  enddo
+          enddo
+
+
+       !write (*,*) 'check alpha beta in initial guess', nrorb_init_alpha, nrorb_init_beta
+
+          write (*,*) 'check phi nrorbs 3rd'!,phi , nrorb, nrorb_alpha, nrorb_beta, nrorb_spinorbital
+          write (*,*) phi(1,1)
+
+          write (*,*) 'check phi_spinorbital nrorbs after dsyev' !,phi !, nrorb, nrorb_alpha, nrorb_beta, nrorb_spinorbital
+          !write (*,*) phi(1,1)
+
+          do mu=1, nrprime/3
+            do j=1, nrorb/3
+              write (*,*) mu,j, dreal(phi(mu,j)), dreal(phi_spinorbital(mu,2*j-1)), dreal(phi_spinorbital(mu,2*j))
+            end do
+          end do
+
+
+          write (*,*) 'check phi nrorbs' !, nrorb, nrorb_alpha, nrorb_beta, nrorb_spinorbital
+          write (*,*) phi(1,1), dreal(phi(1,1))
+         ! write (*,*) 'phi', phi
+         ! write (*,*) 'phi_spinorbital',phi_spinorbital
+
+          flag_print = 3
+          call print_phi(flag_print)
+
+          write (*,*) 'check phi nrorbs 4th' !, nrorb, nrorb_alpha, nrorb_beta, nrorb_spinorbital
+          write (*,*) phi(1,1)  , phi(1,(1))
+          call compare_scalar_real(dreal(phi(1,1)), dreal(phi_spinorbital(1,1 )) )
+
+          !call compare_matrix_real(phi,phi_spinorbital)
+
+       !   nrorb_alpha = nrorb
+       !   nrorb_beta  = nrorb
+       !   nrorb_alpha  = nrorb_alpha
+       !   nrorb_beta   = nrorb_beta
+
+      ! fortran print array convention, 1,1; 2,1;3,1; 1,2,2,2,3,2;...
+      !    write (*,*) 'check phi_spinorbital',      dreal(phi_spinorbital)
+
+      !  this may be possible for openshell
+      ! 1 and 2 the same / 3 and 5 the same
+      ! but something is missing
+  !    do mu=1,nrprime
+  !      do i=1,2*nrorb
+  !        i2 = (i + 1)/2
+  !        phi(mu,i2) = h2(mu,i)
+  !      enddo
+  !    enddo
+
+    !cw: need to check, at least print the norm
+    ! normalize
+          do i=1,nrorb
+            norm = 0.0_dp
+            do mu=1,nrprime
+              norm = norm + dconjg(phi(mu,i))*phi(mu,i)
+            enddo
+            norm = dsqrt(norm)
+          end do
+          ! write(*,*) "norm is",norm
+
+
+          do i=1,nrorb_spinorbital
+            norm_spinorbital = 0.0_dp
+            do mu=1,nrprime
+              norm_spinorbital = norm_spinorbital + dconjg(phi_spinorbital(mu,i))*phi_spinorbital(mu,i)
+            enddo
+            norm_spinorbital = dsqrt(norm_spinorbital)
+          end do
+          ! write(*,*) "norm_spinorbital is",norm_spinorbital
+
+          call compare_scalar_real(norm,norm_spinorbital)
+  !     do mu=1,nrprime
+  !       phi(mu,i) = phi(mu,i)/norm
+  !     enddo
+  !     norm = 0.0_dp
+  !   do i=1,nrorb
+  !     do j=1,nrorb
+  !       norm = 0.0_dp
+  !       do mu=1,nrprime
+  !         norm = norm + dconjg(phi(mu,i))*phi(mu,i)
+  !         norm = norm + dconjg(phi(mu,j))*phi(mu,i)
+  !       enddo
+  !       write(*,*) "norm is",i,j,norm
+  !     enddo
+  !   enddo
+
+  !    endif
+        ! end no restart
+
+        !> could we generalize so that a converged wavefunction say 431 can be used as
+        !> a starting point for 441? would speed up the initial steps greatly
+
+        ! read in partially
+        ! some weird stuff happens in here that can mess up the wavefunction
+        ! if using 2 spfs for systems that are not the standard LiH, like for example
+        ! H2 or HeH+, don't use restart = 1
+  !      if (restart == 1) then
+  !      do i=1,
+  !      open(90,file='phi_init.dat')
+  !      write(90,*) phi(1,1)
+  !      close(90)
+
+  !skip
+        else if (restart == 1) then
+
+          call dfftw_plan_dft_1d(planf,nrprimn,auxphin,auxphin2,fftw_forward,0)
+          call dfftw_plan_dft_1d(planb,nrprimn,auxphin2,auxphin3,fftw_backward,0)
+
+          auxphin(:) = c0
+          auxphin2(:) = c0
+          auxphin3(:) = c0
+          A(:) = c0
+          A_spinorbital(:) = c0
+
+          write(nnn,'(i2)') 2*nrorb
+          open(newunit=spsi,file="startpsi")
+          !> read in A elements from converged single SPF
+          do i=1, nrindep*(nrspf-1)
+            read(spsi,*) rea, ima
+            A(i) = dcmplx(rea,ima)
+            ! Mar-7: need to correct
+            A_spinorbital(i) = dcmplx(rea,ima)
+          enddo
+
+          !> set the A elements for the second SPF to 0 (complex)
+          !> can just be handled by initilizing A to c0
+  !        do i=nrindep*(nrspf-1)+1, nrindep*nrspf
+  !          A(i) = c0
+  !        enddo
+
+          do mu=1, nrprime
+  !          read(20,'('//nnn//'(e23.16,1x))') (rep(in),in=1,nrorb), (imp(in),in=1,nrorb)
+            read(spsi,'('//stri(2*nrorb)//'(e23.16,1x))') (rep(in),in=1,nrorb), (imp(in),in=1,nrorb)
+            do in=1, nrorb
+              phi(mu,in) = dcmplx(rep(in),imp(in))
+            enddo
+          enddo
+          write(ncol,'(i1)') 2*(nrspf-1)
+  !        ncol = stri(2*(nrspf-1))
+          !> fill the n-1 SPF(s) with values from previous calculation
+          do ix=1, nrprimn
+  !          read(20,'('//ncol//'(e23.16,1x))') (rep(in),in=1,nrspf-1), (imp(in),in=1,nrspf-1)
+            read(spsi,'('//stri(2*(nrspf-1))//'(e23.16,1x))') &
+                  (rep(in),in=1,nrspf-1), (imp(in),in=1,nrspf-1)
+
+            do in=1, nrspf-1
+              phin(ix,in) = dcmplx(rep(in),imp(in))
+            enddo
+          enddo
+          close(spsi)
+
+          !> prepare the projection operator
+          if (.not. allocated(projP)) allocate(projP(nrprimn,nrprimn))
+
+          projP(:,:) = c0
+
+  !        do ix=1,nrprimn
+  !          do jx=1,nrprimn
+  !            projP(ix,jx) = c0
+  !          enddo
+  !        enddo
+
+          !> create projection operator from phin of converged part
+          do in=1, nrspf-1
+            do ix=1, nrprimn
+              do jx=1, nrprimn
+                projP(ix,jx) = projP(ix,jx) + phin(ix,in)*dconjg(phin(jx,in))
+              enddo
+            enddo
+          enddo
+          ! this part used to breaks if not commented out for nrspf == 1
+          ! not anymore apparently, the compiler did it's job ,
+          !> we always have a nrspf > 1 if using restart = 1
+
+          !> ok create auxilary phin of first spf
+          do i=1, nrprimn
+            auxphin(i) = phin(i,nrspf-1)
+          enddo
+  !        else
+  !          auxphin(:) = c0
+  !        endif
+
+          !> do a FFT on auxphin result is stored in auxphin2
+          call dfftw_execute_dft(planf,auxphin,auxphin2)
+          !>>> should this be called twice?
+          !>>> testing seems to indicate that it does not
+  !        call dfftw_execute_dft(planf,auxphin,auxphin2)
+
+          !> multiply it by the k-space factor
+          auxphin2(:) = kx(:)*auxphin2(:)
+
+  !        do i=1,nrprimn
+  !          auxphin2(i) = kx(i)*auxphin2(i)
+  !        enddo
+
+          !> now do an inverst FFT of auxphin2 to get auxphin3
+          call dfftw_execute_dft(planb,auxphin2,auxphin3)
+
+          !> take the norm as the sum of \phi_n^* \cdot \phi_n
+          norm = sum(dreal(dconjg(auxphin3(:))*auxphin3(:)))
+  !        norm = 0.0_dp
+  !        do i=1, nrprimn
+  !          norm = norm + dreal(dconjg(auxphin3(i))*auxphin3(i))
+  !        enddo
+
+  !        norm = dsqrt(norm*(r(2) - r(1)))
+          !> dr should work for this instead of (r(2) - r(1))
+
+          !May-10 norm_spinorbital?
+          !phin so far the same for spatial and spinorbital approaches
+
+          norm = dsqrt(norm*dr)
+          !> set the final spf of phin to be the normalized auxphin3
+          phin(:,nrspf) = auxphin3(:)/norm
+  !        do i=1, nrprimn
+  !          phin(i,nrspf) = auxphin3(i)/norm
+  !        enddo
+
+          !> ok, now do some stuff with the projection operator
+          do i=1, nrprimn
+            auxphin(i) = phin(i,nrspf)
+            do j=1, nrprimn
+              auxphin(i) = auxphin(i) - projP(i,j)*phin(j,nrspf)*dr
+  !            auxphin(i) = auxphin(i) - projP(i,j)*phin(j,nrspf)*(r(2) - r(1))
+            enddo
+          enddo
+
+          deallocate(projP)
+
+          !> do the same thing again with the normalization with whatever auxphin has become
+          norm = sum(dreal(dconjg(auxphin(:))*auxphin(:)))
+  !        norm = 0.0_dp
+  !        do i=1, nrprimn
+  !          norm = norm + dreal(dconjg(auxphin(i))*auxphin(i))
+  !        enddo
+
+          norm = dsqrt(norm*dr)
+  !        norm = dsqrt(norm*(r(2) - r(1)))
+
+          !> this is our projected initial phin
+          phin(:,nrspf) = auxphin(:)/norm
+  !        do i=1,nrprimn
+  !          phin(i,nrspf) = auxphin(i)/norm
+  !        enddo
+
+          !> destroy all evidence
+          call dfftw_destroy_plan(planf)
+          call dfftw_destroy_plan(planb)
+
+        endif
+
+        ! Feb-5
+        ! end restart == 1
+        !> end restart sequence
+
+  !      write(nrow,'(i2)') 2*nrorb+1
+        !> olap is never actually utilized, I assume this is just a check
+        !> to make sure delta_{ij} holds true
+        !>
+  !      nrow = stri(2*nrorb + 1)
+
+  ! after the restart section
+
+       ! write (*,*) 'enter new testing section'
+       ! Feb-29
+       ! cw: need extension for spinorbital
+        open(20,file="olap.ij")
+        ! write it into file olap.ij
+        write(20,*) 'Electronic phi overlap'
+        write(20,'(a5,a5,a15)') 'MO', 'MO', 'Overlap'
+  !      do i=1, nrorb
+  !        do j=1, nrorb
+        do i=1, nrorb
+          do j=1, nrorb
+            olap = c0
+            do mu=1, nrprime
+              olap = olap + dconjg(phi(mu,i))*phi(mu,j)
+            enddo
+  !          write(20,*) i, j, olap
+            write(20,'(i5,i5,f15.7)') i, j, cdabs(olap)
+          enddo
+        enddo
+
+  !      write(20,*) ''
+  !      write(20,*) '===================='
+        write(20,*) 'Nuclear phi overlap'
+        write(20,'(a5,a5,a15)') 'SPF', 'SPF', 'Overlap'
+
+        do i=1, nrspf
+          do j=1, nrspf
+            olap = c0
+            do ix=1, nrprimn
+              olap = olap + dconjg(phin(ix,i))*phin(ix,j)
+            enddo
+  !          write(20,*) i, j, olap*dr
+            write(20,'(i5,i5,f15.7)') i, j, cdabs(olap)*dr
+          enddo
+        enddo
+        close(20)
+
+
+
+          write (*,*) 'check phi nrorbs -2', nrorb, nrorb_alpha, nrorb_beta, nrorb_spinorbital
+
+          do mu=1, nrprime
+            do i=1, nrorb
+         !     write (*,'(A,I3,I3)'), 'phi', mu,i
+         !     write (*,'(F15.9,F15.9,F15.9,F15.9,F15.9)'), dreal(phi(mu,i)), dreal(phi_alpha(mu,i)), dreal(phi_beta(mu,i)), dreal(phi_spinorbital(mu,(2*i-1) )), dreal(phi_spinorbital(mu,(2*i)))
+            enddo
+          enddo
+
+
+
+  !      call dfftw_destroy_plan(planf)
+  !      call dfftw_destroy_plan(planb)
+
+        return
+      end subroutine
+
+    !> Helping functions and subroutines called within the main wavefunction init routines
+    !cw> map detl into a number
+    integer function checksum(iarr, nrorb_input)
+      implicit none
+      integer :: iarr(nel), base, ie, cs, nrorb_input
+
+      cs = 0
+      ! base gives the number of virtual orbitals plus one
+      base = nrorb_input - nel + 1
+      do ie=1, nel
+        cs = cs + (iarr(nel-ie+1) - nel + ie - 1)*(base**ie)
+      enddo
+
+      checksum = cs
+
+    end function checksum
+
+
+
+
+
+
+
+    subroutine splussminus(ie,je,larr,indflag)
+      ! apply s_+ s_- to Slater determinant
+      ! indflag indicates, if s_- |Psi> has been zero
+
+      integer :: ie, je, larr(nel,nel,nel), indflag(nel,nel), ie2
+      integer :: iarr(nel)
+
+      ! 1st apply s_-
+      if (mod(larr(ie,je,je),2) == 1) then
+        larr(ie,je,je) = larr(ie,je,je) + 1
+      else
+        indflag(ie,je) = 0
+      endif
+
+      do ie2=1,nel
+        iarr(ie2) = larr(ie,je,ie2)
+      enddo
+      if (iszero(iarr)) indflag(ie,je) = 0
+
+      ! now apply s_+
+      if (mod(larr(ie,je,ie),2) == 0) then
+        larr(ie,je,ie) = larr(ie,je,ie) - 1
+      else
+        indflag(ie,je) = 0
+      endif
+
+      do ie2=1,nel
+        iarr(ie2) = larr(ie,je,ie2)
+      enddo
+      if (iszero(iarr)) indflag(ie,je) = 0
+
+      return
+    end subroutine
+
+    real(dp) function slatermult(ie,je,jarr,larr)
+    !> multiplies two Slater-Determinants after S_+S_- application
+
+      integer :: ie, je, ie2, jarr(nel), larr(nel,nel,nel)
+
+      do ie2=1,nel
+        if (jarr(ie2) /= larr(ie,je,ie2)) then
+          slatermult = 0.0_dp
+          return
+        endif
+      enddo
+
+  !    do ie2 = 1, nel
+  !      if (jarr(ie2) /= larr(ie,je,ie2)) then
+  !        slatermult = 0.0_dp
+  !        exit
+  !      else
+  !        slatermult = 1.0_dp
+  !      endif
+  !    enddo
+  !    return
+
+      slatermult = 1.0_dp
+
+      return
+    end function
+
+    real(dp) function ssqterm2(cjs)
+
+      integer :: cjs, na, nb, ie
+  !    integer :: detl(nrindep*nel)
+
+      na = 0
+      nb = 0
+
+      do ie=1, nel
+        !> if value is divisible by 2
+        if (mod(detl((cjs-1)*nel+ie),2) == 0) then
+          !> add 1 to nb index
+          nb = nb + 1
+        else
+          !> add 2 to na index
+          na = na + 1
+        endif
+      enddo
+
+      ssqterm2 = 0.5_dp*(na - nb)
+
+      return
+    end function
+
