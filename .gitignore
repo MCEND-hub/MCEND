@@ -1,0 +1,11 @@
+**/*.mod
+**/*.o
+src/tdci
+**/*.swp
+**/*__pycache__
+**/*.bak
+bin/*
+build/*
+.scannerwork/*
+doc/html
+doc/latex
