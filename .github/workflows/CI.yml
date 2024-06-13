@@ -43,5 +43,6 @@ jobs:
 #        python -m pip install uv
     - name: compile MCEND - classic intel
       run: |
+        mkdir build
         make
       
