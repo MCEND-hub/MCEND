@@ -38,6 +38,9 @@ jobs:
         compiler: ${{ matrix.toolchain.compiler }}
         version: ${{ matrix.toolchain.version }}
         install_mkl: "true"
+    - name: install fftw3
+      run: |
+        sudo apt-get install libfftw3-dev
 #    - name: Install python dependencies
 #      run: |
 #        python -m pip install uv
