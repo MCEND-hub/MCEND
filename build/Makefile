@@ -1,7 +1,9 @@
-FC = ifort
-FFLAGS = -O3 -fopenmp -c -fast  -traceback -i8 -pg -g -qmkl=sequential
-MKL_LIBS = $(MKLROOT)/lib/intel64
-LINK_FLAGS =  -O3 -qopenmp -L${MKLROOT}/lib/intel64 -traceback -Wl,--start-group -lfftw3 -liomp5 -lpthread -lm -ldl -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+FC = ifx
+FC_classic = ifort
+FFLAGS = -O3
+LINK_FLAGS = -O3 -qopenmp -L${MKLROOT}/lib/intel64 -traceback -Wl,--start-group -lfftw3 -liomp5 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+FFLAGS_classic = -O3 -fopenmp -c -fast -traceback -pg -i8 -r8 -extend-source -fpe0 -fpconstant
+LINK_FLAGS_classic =  -O3 -qopenmp -L${MKLROOT}/lib/intel64 -traceback -Wl,--start-group -lfftw3 -liomp5 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 
 BINDIR=../bin
@@ -13,7 +15,12 @@ all: $(BINDIR)/mcend
 $(BINDIR)/mcend: $(OBJ)
 	$(FC) -o $(BINDIR)/mcend $(OBJ) $(LINK_FLAGS)
 
-debug: FFLAGS += -O0 -i8 -warn all -check all -traceback -fp-stack-check 
+classic: FC = $(FC_classic)
+classic: FFLAGS = $(FFLAGS_classic)
+classic: LINK_FLAGS = $(LINK_FLAGS_classic)
+classic: $(BINDIR)/mcend
+
+debug: FFLAGS += -O0 -i8 -warn all -check all -traceback -fp-stack-check -g
 debug: $(BINDIR)/mcend
 
 gfort: FC = gfortran
