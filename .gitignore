@@ -6,6 +6,8 @@ src/tdci
 **/*.bak
 bin/*
 build/*
+!build/Makefile
 .scannerwork/*
 doc/html
 doc/latex
+update
