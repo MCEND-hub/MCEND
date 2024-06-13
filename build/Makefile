@@ -1,5 +1,5 @@
 FC = ifort
-FFLAGS = -O3 -fopenmp -c -fast  -traceback -i8 -I/opt/intel/oneapi/compiler/2023.2.0/linux/compiler/include/ -I${MKLROOT}/lib/intel64 -pg -g -qmkl=sequential
+FFLAGS = -O3 -fopenmp -c -fast  -traceback -i8 -pg -g -qmkl=sequential
 MKL_LIBS = $(MKLROOT)/lib/intel64
 LINK_FLAGS =  -O3 -qopenmp -L${MKLROOT}/lib/intel64 -traceback -Wl,--start-group -lfftw3 -liomp5 -lpthread -lm -ldl -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
