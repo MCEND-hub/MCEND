@@ -7,6 +7,7 @@ src/tdci
 bin/*
 build/*
 !build/Makefile
+!bin/.keep
 .scannerwork/*
 doc/html
 doc/latex
