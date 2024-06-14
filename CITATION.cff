@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Ulusoy"
+  given-names: "Inga"
+  orcid: "https://orcid.org/0000-0001-7294-4148"
+- family-names: "Aebersold"
+  given-names: "Lucas"
+  orcid: "https://orcid.org/xxxx-xxxx-xxxx-xxxx"
+- family-names: "Wang"
+  given-names: "Cong"
+  orcid: "https://orcid.org/xxxx-xxxx-xxxx-xxxx"
+- family-names: "Wilson"
+  given-names: "Angela"
+  orcid: "https://orcid.org/xxxx-xxxx-xxxx-xxxx"
+title: "MCEND"
+version: 2.5.1
+doi: xx.xxxxx/xxxxxxx
+date-released: 2024
+url: "https://github.com/iulusoy/MCEND"
