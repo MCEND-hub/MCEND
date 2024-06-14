@@ -1,6 +1,9 @@
 all:
 	$(MAKE) -C build all
 
+classic:
+	$(MAKE) -C build classic
+
 debug:
 	$(MAKE) -C build debug   
 
