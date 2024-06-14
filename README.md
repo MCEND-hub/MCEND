@@ -31,7 +31,7 @@ All of these can also be used with options for debugging and no optimization (ot
 ```
 make classic_debug
 ```
-Alternatively, `make debug` (for `ifx`) and `make debug_gfortran (for `gfortran`) are available.
+Alternatively, `make debug` (for `ifx`) and `make debug_gfortran` (for `gfortran`) are available.
 The source code compiles and runs on linux and MacOS, it has not been tested on Windows.
 
 ## Developer's documentation
