@@ -141,7 +141,6 @@
           close(24)
         enddo
 
-
         do i = 1, nrprime
           hmat(i,i,:) = hmat(i,i,:) + shifte/dble(nel)
         enddo
@@ -179,7 +178,7 @@
         xerints = trim(cmpdname)//'-ints-01.dat'
         path2ints1 = trim(intdir)//'/'//trim(h_vmatf)
         path2ints2 = trim(intdir)//'/'//trim(xerints)
-        write (*,*) "path2ints1", path2ints1
+      !  write (*,*) "path2ints1", path2ints1
         open(newunit=hmatf, file=trim(path2ints1), status='old', iostat=ios, iomsg=iom)
         if (ios /= 0) then
           write(*,*) 'Fatal error, could not open '//trim(path2ints1)//', iomsg:'
@@ -214,6 +213,7 @@
 
         !> shift energy closer to zero to increase numerical stability
         !> make sure loop only goes over only the diagonal
+        !write (*,*) 'shifte', shifte 
         do i=1, nrprime
           hmat(i,i,:) = hmat(i,i,:) + shifte/dble(nel)
         enddo
@@ -222,7 +222,7 @@
         tmat(:,:) = taux(:,:,inigrd)
         close(hmatf)
 
-        write (*,*) 'read step 2 path2ints2', path2ints2
+        !write (*,*) 'read step 2 path2ints2', path2ints2
         open(newunit=aoints, file=trim(path2ints2), status='old', iostat=ios, iomsg=iom)
         if (ios /= 0) then
           write(*,*) 'Fatal error, could not open '//trim(path2ints2)//', iomsg:'
@@ -342,6 +342,7 @@
         character(len=10) :: ncol
         character(len=1)  :: ncol2
 
+
         do i=1, nrprimn
           r(i) = rmin + (i - 1)*dr
         enddo
@@ -371,9 +372,9 @@
           kx(i) = dble(i - 1 - nrprimn)*dk
         enddo
 
+
         if (basis == 1) call akimpotintvenao()
-        !> remnant of moving basis routine
-        if (basis == 2) call fillvenao(taux)
+
 
         ! complex absorbing potential
         vcap(1:nrprime,1:nrprime) = 0.0_dp
@@ -387,10 +388,13 @@
 
         endif
 
+
         if (use_wcap) call getnuclcap()
         ncol = stri(nel)
-        nrorb_alpha = nrorb !+ 1
-        nrorb_beta  = nrorb !- 1
+        nrorb_alpha = nrorb
+        nrorb_beta  = nrorb
+
+
 
         if (flag_spinorbital == 0) then
           call comb(2*nrorb, nel, rcom)
@@ -585,7 +589,7 @@
         if (flag_spinorbital == 0) then
 
           write(*,*) "shdl-size: ", nrshf, " / ", max_nrindep*(nel-1)
-          write(*,*) "shdl determinants", size(shdl), counter
+         ! write(*,*) "shdl determinants", size(shdl) , counter
           write(*,*) "max_nrindep", max_nrindep
           if (nel > 1) then
             open(23,file="shdl.ij")
@@ -1072,47 +1076,14 @@
         enddo
 
 
-        open(newunit=fhmf_spinorbital1,file="hmf_spinorbital_1.txt")
-        write (fhmf_spinorbital1,*) hmf_spinorbital(1,:)
-        close(fhmf_spinorbital1)
-        open(newunit=fhmf_spinorbital2,file="hmf_spinorbital_2.txt")
-        write (fhmf_spinorbital2,*) hmf_spinorbital(2,:)
-        close(fhmf_spinorbital2)
+        ! open(newunit=fhmf_spinorbital1,file="hmf_spinorbital_1.txt")
+        ! write (fhmf_spinorbital1,*) hmf_spinorbital(1,:)
+        ! close(fhmf_spinorbital1)
+        ! open(newunit=fhmf_spinorbital2,file="hmf_spinorbital_2.txt")
+        ! write (fhmf_spinorbital2,*) hmf_spinorbital(2,:)
+        ! close(fhmf_spinorbital2)
         end if
 
-        ! not tested yet
-        ! setting up matrix for S^2 computation
-        !> maybe this is where the <S2> value should be calculated?
-        do cjs=1, nrindep
-          do ie=1, nel
-            jarr(ie) = detl((cjs-1)*nel+ie)
-          enddo
-          do cls=1, nrindep
-            do ie=1, nel
-              do je=1, nel
-                indflag(ie,je) = 1
-                do ie2=1, nel
-                  larr(ie,je,ie2) = detl((cls-1)*nel+ie2)
-                enddo
-                call splussminus(ie,je,larr,indflag)
-              enddo
-            enddo
-            ssqmat(cjs,cls) = 0.0_dp
-            do ie=1, nel
-              do je=1, nel
-                blub = slatermult(ie,je,jarr,larr)
-                ssqmat(cjs,cls) = ssqmat(cjs,cls) + indflag(ie,je)*blub
-              enddo
-            enddo
-          enddo
-          ssqmat(cjs,cjs) = ssqmat(cjs,cjs) - ssqterm2(cjs) + ssqterm3(cjs)
-        enddo
-        write(*,*) "ssqmat-size: ", nrindep**2/(128*1024), " MB"
-        open(20,file="ssqmat.diag")
-        do cjs=1, nrindep
-          write(20,*) cjs, "  ", ssqmat(cjs,cjs)
-        enddo
-        close (20)
         return
       end subroutine
 
@@ -1146,7 +1117,7 @@
         if (restart == 2 .or. restart == 5) then
           nnn = stri(2*nrorb)
           if (flag_spinorbital==0) then
-            open(newunit=spsi,file="startpsi")
+            open(newunit=spsi,file="finalpsi")
             do i=1, nrindep*nrspf
               read(spsi,*) rea, ima
               A(i) = dcmplx(rea,ima)
@@ -1170,7 +1141,7 @@
             close(spsi)
 
           else if (flag_spinorbital==1) then
-            open(newunit=spsi,file="startpsi_spinorbital")
+            open(newunit=spsi,file="finalpsi_spinorbital")
             do i=1, nrindep_spinorbital*nrspf
               read(spsi,*) rea_spinorbital, ima_spinorbital
               A_spinorbital(i) = dcmplx(rea_spinorbital,ima_spinorbital)
@@ -1254,30 +1225,55 @@
           enddo
           close(scfvals)
 
-          if (mod(nrprimn,2) == 0) then
-          ! add kinetic term for nuclear Hamiltonian
-            do ix=1, nrprimn
-              do jx=1, nrprimn
-                if (ix == jx) then
-                  hnuc(ix,ix) = hnuc(ix,ix) + pi**2*(nrprimn**2 + 2)/(6.0_dp*massn*nrprimn**2*dr**2)
-                else
-                  hnuc(ix,jx) = ((-1.0_dp)**(ix - jx))*pi**2/((nrprimn*dr*dsin(dble(ix - jx)*pi/dble(nrprimn)))**2*massn)
-                endif
-              enddo
-            enddo
 
-          else
-            do ix=1, nrprimn
-              do jx=1, nrprimn
+          
+          if (mod(nrprimn, 2) == 0) then
+                 
+            !write (*,*) 'enter even branch'
+            ! so far uniform nrprimn, convienent to define array
+            do ix = 1, nrprimn
+              do jx = 1, nrprimn
                 if (ix == jx) then
-                !  Tannor, quantum mechanics time-dependent perspective, p 307, 11.172
-                  hnuc(ix,ix) = hnuc(ix,ix) + pi**2*(nrprimn**2 + 1)/(6.0_dp*massn*nrprimn**2*dr**2)
+            ! Tannor, quantum mechanics time-dependent perspective, p 307, 11.172
+                  hnuc(ix, ix) = hnuc(ix, ix) + pi ** 2 * (nrprimn ** 2 + 2) & 
+                  & / (6.0_dp * massn * nrprimn ** 2 * dr ** 2)
+                  
                 else
-                  hnuc(ix,jx) = ((-1.0_dp)**(ix - jx))*pi**2* dcos( dble(ix - jx)*pi/dble(nrprimn) ) &
-  & /((nrprimn*dr*dsin(dble(ix - jx)*pi/dble(nrprimn)))**2*massn)
-                endif
-              enddo
-            enddo
+                  hnuc(ix, jx) = ((- 1.0_dp) ** (ix - jx)) * pi ** 2 & 
+                  & / ((nrprimn * dr * dsin(dble(ix - jx) * pi / dble(nrprimn))) ** 2 * massn )
+                end if
+              end do
+            end do 
+            
+          else                
+           ! write (*,*) 'enter odd branch'
+            do ix = 1, nrprimn
+              do jx = 1, nrprimn
+                if (ix == jx) then
+            ! Tannor, quantum mechanics time-dependent perspective, p 307, 11.172
+                  hnuc(ix, ix) = hnuc(ix, ix) + pi ** 2 * (nrprimn ** 2 + 1) &
+                  & / (6.0_dp * massn * nrprimn ** 2 * dr ** 2)
+                else
+                  hnuc(ix, jx) = ((- 1.0_dp) ** (ix - jx)) * pi ** 2 * dcos( dble(ix - jx) * pi / dble(nrprimn) ) &
+& / (nrprimn * dr)**2 /  massn
+                end if
+              end do
+            end do   
+
+
+            do ix = 1, nrprimn
+              do jx = 1, nrprimn
+                if (ix == jx) then
+                   continue
+                else
+                   hnuc(ix, jx) = hnuc(ix, jx)  / ( dsin(dble(ix - jx) * pi /dble(nrprimn)) )**2
+                end if
+              end do
+            end do
+
+
+
+
           end if
 
           jobz = "V"
@@ -1450,32 +1446,35 @@
 
         endif
 
-        open(20,file="olap.ij")
-        write(20,*) 'Electronic phi overlap'
-        write(20,'(a5,a5,a15)') 'MO', 'MO', 'Overlap'
-        do i=1, nrorb
-          do j=1, nrorb
-            olap = c0
-            do mu=1, nrprime
-              olap = olap + dconjg(phi(mu,i))*phi(mu,j)
+        if (flag_spinorbital == 0) then 
+          open(20,file="olap.ij")
+          write(20,*) 'Electronic phi overlap'
+          write(20,'(a5,a5,a15)') 'MO', 'MO', 'Overlap'
+          do i=1, nrorb
+            do j=1, nrorb
+              olap = c0
+              do mu=1, nrprime
+                olap = olap + dconjg(phi(mu,i))*phi(mu,j)
+              enddo
+              write(20,'(i5,i5,f15.7)') i, j, cdabs(olap)
             enddo
-            write(20,'(i5,i5,f15.7)') i, j, cdabs(olap)
           enddo
-        enddo
+        
+         write(20,*) 'Nuclear phi overlap'
+         write(20,'(a5,a5,a15)') 'SPF', 'SPF', 'Overlap'
 
-        write(20,*) 'Nuclear phi overlap'
-        write(20,'(a5,a5,a15)') 'SPF', 'SPF', 'Overlap'
+         do i=1, nrspf
+           do j=1, nrspf
+             olap = c0
+             do ix=1, nrprimn
+               olap = olap + dconjg(phin(ix,i))*phin(ix,j)
+             enddo
+             write(20,'(i5,i5,f15.7)') i, j, cdabs(olap)*dr
+           enddo
+         enddo
+         close(20)
 
-        do i=1, nrspf
-          do j=1, nrspf
-            olap = c0
-            do ix=1, nrprimn
-              olap = olap + dconjg(phin(ix,i))*phin(ix,j)
-            enddo
-            write(20,'(i5,i5,f15.7)') i, j, cdabs(olap)*dr
-          enddo
-        enddo
-        close(20)
+         end if 
 
         return
       end subroutine
@@ -1496,102 +1495,10 @@
       checksum = cs
 
     end function checksum
-    !> apply s_+ s_- to Slater determinant
-    !! @param indflag indicates, if s_- |Psi> has been zero
-    subroutine splussminus(ie,je,larr,indflag)
 
 
-      integer :: ie, je, larr(nel,nel,nel), indflag(nel,nel), ie2
-      integer :: iarr(nel)
 
-      ! 1st apply s_-
-      if (mod(larr(ie,je,je),2) == 1) then
-        larr(ie,je,je) = larr(ie,je,je) + 1
-      else
-        indflag(ie,je) = 0
-      endif
-
-      do ie2=1,nel
-        iarr(ie2) = larr(ie,je,ie2)
-      enddo
-      if (iszero(iarr)) indflag(ie,je) = 0
-
-      ! now apply s_+
-      if (mod(larr(ie,je,ie),2) == 0) then
-        larr(ie,je,ie) = larr(ie,je,ie) - 1
-      else
-        indflag(ie,je) = 0
-      endif
-
-      do ie2=1,nel
-        iarr(ie2) = larr(ie,je,ie2)
-      enddo
-      if (iszero(iarr)) indflag(ie,je) = 0
-
-      return
-    end subroutine
-
-!> Multiplies two Slater-Determinants after S_+S_- application
-    real(dp) function slatermult(ie,je,jarr,larr)
-
-      integer :: ie, je, ie2, jarr(nel), larr(nel,nel,nel)
-
-      do ie2=1,nel
-        if (jarr(ie2) /= larr(ie,je,ie2)) then
-          slatermult = 0.0_dp
-          return
-        endif
-      enddo
-
-      slatermult = 1.0_dp
-
-      return
-    end function
-
-    real(dp) function ssqterm2(cjs)
-
-      integer :: cjs, na, nb, ie
-
-      na = 0
-      nb = 0
-
-      do ie=1, nel
-        !> if value is divisible by 2
-        if (mod(detl((cjs-1)*nel+ie),2) == 0) then
-          !> add 1 to nb index
-          nb = nb + 1
-        else
-          !> add 2 to na index
-          na = na + 1
-        endif
-      enddo
-
-      ssqterm2 = 0.5_dp*(na - nb)
-
-      return
-    end function
-
-    ! hmm, ok this appears to be very similar to ssquared in analysis
-    real(dp) function ssqterm3(cjs)
-
-  !    integer :: detl(nrindep*nel)
-      integer :: cjs, na, nb, ie
-
-      na = 0
-      nb = 0
-
-      do ie=1, nel
-        if (mod(detl((cjs-1)*nel+ie), 2) == 0) then
-          nb = nb + 1
-        else
-          na = na + 1
-        endif
-      enddo
-
-      ssqterm3 = 0.25_dp*(na - nb)*(na - nb)
-
-      return
-    end function
+    
 
 !> Get index 1.
     subroutine getindex(iarr,ind,vorz, nrorb_input, hval3_input, nrindep_input)
@@ -1905,6 +1812,8 @@
         enddo
       enddo
 
+      write (*,*) 'matrix element of interpolated <lambda mu |Ven|mu \lambda>'
+      write (*,*) 'mu lambda R_lambda <lambda mu |Ven|mu \lambda>'
       do mu = 1, nrprime
         do j = 1, nrprimn
           write(*,printform) mu, j, r(j), venmat(mu,mu,j)
@@ -1966,60 +1875,7 @@
 
     end subroutine
 
-!! @param Venmat The electron-nuclear attraction is hmat - tmat for all points on the nuclear grid.
-    subroutine fillvenao(aux)
-
-      implicit none
-      real(dp) ::  aux(nrprime,nrprime,nrensp)
-      integer :: ix, mu, nu
-      character(50) ::  printform
-      character(50) ::  printformt
-      printform = '(2(i5,1x),(f13.7,1x),(f18.12))'
-      printformt = '(2(a5,1x),(a13,1x),(a18))'
-
-      do mu=1, nrprime
-        do nu=1, nrprime
-          do ix=1, nrprimn
-            venmat(mu,nu,ix) = hmat(mu,nu,ix) - aux(mu,nu,ix)
-          enddo
-        enddo
-      enddo
-
-       write(*,*) "# Printing V_en..."
-
-       do mu=1, nrprime
-         do ix=1, nrprimn
-          write(*, printform) mu, ix, r(ix), venmat(mu,mu,ix)
-         enddo
-       write(*,*) ""
-       enddo
-
-      return
-    end subroutine
-
-!> Part of prototype moving basis routine.
-    subroutine get_nuc_pos(rnuc)
-
-      implicit none
-      real(dp)    :: rnuc
-      integer     :: ix, i, j
-
-      rnuc = 0.0_dp
-
-      do ix=1,nrprimn
-        do i=1,nrspf
-          do j=1,nrspf
-            ! BUG: rank mismatch or something else fishy going on
-            ! r(nrprimn)
-            ! (phin(nrprimn,nrspf))
-            ! (rhon(nrspf,nrspf))
-            rnuc = rnuc + r(ix)*dconjg(phin(ix,i))*phin(ix,j)*rhon(i,j)
-          enddo
-        enddo
-      enddo
-      rnuc = rnuc*dr
-
-    end subroutine
+    
 
   end module
 

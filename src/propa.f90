@@ -146,8 +146,8 @@ module propa
       complex(dp) :: irhon(nrspf,nrspf)
       complex(dp) :: rhonRt(nrprimn), rhonRt0(nrprimn)
       complex(dp) :: rhonRtbuff
-      real(dp)    :: valreal(14)
-      real(dp)    :: valreal_spinorbital(14)
+      real(dp)    :: valreal(13)
+      real(dp)    :: valreal_spinorbital(13)
       real(dp)    :: dt, tbeg, tend, facold, t_init
       real(dp)    :: facold_spinorbital
       real(dp)    :: tfin, tout, ef(3)
@@ -212,7 +212,7 @@ module propa
         open(newunit=fentro,file="entropy.t")
         write(fexpec,'(A6,I3,A6,I3,A6,I3,A6,I3,A6,I3,1x,A50)')  "nel", nel, "nsz", nsz, "nrorb" , &
         & nrorb,"nrfrz" ,nrorb_fc, "nrspf", nrspf, intdir
-        write(fexpec,formtt) "time","norm","x","y","z","R","Te","Tn","Vee","Vnn","Ven","Htot","S2","Re(Acf)","Im(Acf)"
+        write(fexpec,formtt) "time","norm","x","y","z","R","Te","Tn","Vee","Vnn","Ven","Htot","Re(Acf)","Im(Acf)"
 
         if (restart == 5 .and. aucofu == 2) then
           write (*,*) 'read spsi_0, restart acf may require psi0 from the very begining-1'
@@ -253,7 +253,7 @@ module propa
         open(newunit=fentro_spinorbital,file="entropy_spinorbital.t")
         write(fexpec_spinorbital,'(A6,I3,A6,I3,A6,I3,A6,I3,A6,I3,1x,A50)')  "nel", nel, "nsz", nsz, "nrorb" , &
 &nrorb,"nrfrz" ,nrorb_fc, "nrspf", nrspf, intdir
-        write(fexpec_spinorbital,formtt) "time","norm","x","y","z","R","Te","Tn","Vee","Vnn","Ven","Htot","S2","Re(Acf)","Im(Acf)"
+        write(fexpec_spinorbital,formtt) "time","norm","x","y","z","R","Te","Tn","Vee","Vnn","Ven","Htot","Re(Acf)","Im(Acf)"
         ! restart acf calculation and read initial psi for acf
         if ( restart == 5 .and. aucofu == 2) then
           open(newunit=spsi_0,file="startpsi_spinorbital_0")
@@ -344,14 +344,14 @@ module propa
 
       ! write out all expectation values.
       if (flag_spinorbital == 0) then
-       write(fexpec,formatv1) 0.0_dp, (valreal(i), i=1,14)
+       write(fexpec,formatv1) 0.0_dp, (valreal(i), i=1,13)
         call flush(fexpec)
         write(fentro,'(A6,I3,A6,I3,A6,I3,A6,I3,1x,A50)')  "nel", nel, "nsz", nsz, "nrorb" ,nrorb, "nrspf", nrspf, intdir
         call rdm1analysis(0.0_dp, fentro,  nrorb*2, rho)
       end if
 
       if (flag_spinorbital == 1) then
-        write(fexpec_spinorbital,formatv1) t_initial, (valreal_spinorbital(i), i=1,14)
+        write(fexpec_spinorbital,formatv1) t_initial, (valreal_spinorbital(i), i=1,13)
         call flush(fexpec_spinorbital)
         write(fentro_spinorbital,'(A6,I3,A6,I3,A6,I3,A6,I3,1x,A50)')  "nel", nel, "nsz", nsz, "nrorb" ,nrorb, "nrspf", nrspf, intdir
         call rdm1analysis(0.0_dp, fentro_spinorbital,  nrorb_spinorbital, rho_spinorbital)
@@ -360,10 +360,17 @@ module propa
       end if
 
       if (logwavef) then
-        open(newunit=indepA, file='indepA_elem.chk')
-        open(newunit=indepA_spinorbital, file='indepA_elem_spinorbital.chk')
-        open(newunit=wavee_f,file="wavee.chk")
-        open(newunit=wavee_f_spinorbital,file="wavee_spinorbital.chk")
+        if (flag_spinorbital == 0) then 
+          open(newunit=indepA, file='indepA_elem.chk')
+          open(newunit=wavee_f,file="wavee.chk")
+        end if
+
+        if (flag_spinorbital == 1) then 
+          open(newunit=indepA_spinorbital, file='indepA_elem_spinorbital.chk')
+          open(newunit=wavee_f_spinorbital,file="wavee_spinorbital.chk")
+        end if
+
+
         open(newunit=waven_f,file="waven.chk")
 
         if (flag_spinorbital == 0) then
@@ -484,10 +491,16 @@ module propa
       if (logev) open(43,file="eigvals.t")
 
       open(31, file="steps.t")
-      open(35, file="npop.t")
-      open(350, file="npop_spinorbital.t")
-      open(newunit=trrho2f, file="trrho2.t")
-      open(newunit=trrho2f_spinorbital, file="trrho2_spinorbital.t")
+
+      if (flag_spinorbital == 0) then
+        open(35, file="npop.t")
+        open(newunit=trrho2f, file="trrho2.t")
+      end if
+
+      if (flag_spinorbital == 1) then
+        open(350, file="npop_spinorbital.t")
+        open(newunit=trrho2f_spinorbital, file="trrho2_spinorbital.t")
+      end if
 
 
       !>  take trace of rho squared -> tr[rho]^2
@@ -507,10 +520,15 @@ module propa
 
 
       !> ok yeah, so this does the \Tr \rho**2
-      write(trrho2f,'(1(f8.3,1x),2(F15.10,2x))') 0.0, dreal(trrho2), dimag(trrho2)
-      write(trrho2f_spinorbital,'(1(f8.3,1x),2(F15.10,2x))') 0.0, dreal(trrho2_spinorbital), dimag(trrho2_spinorbital)
-      call flush(trrho2f)
-      call flush(trrho2f_spinorbital)
+      if (flag_spinorbital == 0) then
+        write(trrho2f,'(1(f8.3,1x),2(F15.10,2x))') 0.0, dreal(trrho2), dimag(trrho2)
+        call flush(trrho2f)
+      end if
+
+      if (flag_spinorbital == 1) then
+        write(trrho2f_spinorbital,'(1(f8.3,1x),2(F15.10,2x))') 0.0, dreal(trrho2_spinorbital), dimag(trrho2_spinorbital)
+        call flush(trrho2f_spinorbital)
+      end if
 
       if (flag_spinorbital == 0) then
         write(35,'('//trim(npf)//'(F15.10,1x))') tend*au2fs, (nel*np(i),i=1,2*nrorb)
@@ -564,7 +582,7 @@ module propa
         end if
 
         if ( flag_spinorbital == 1 ) then
-           call runrk8(psi_spinorbital, tbeg, tend, facold_spinorbital, dt, np_spinorbital, npn_spinorbital, &
+           call runrk8(psi_spinorbital, tbeg, tend, facold, dt, np_spinorbital, npn_spinorbital, &
     &  nrindep_spinorbital, dgldim_spinorbital,&
     & nrorb_spinorbital, nrorb_spinorbital, max_nrindep_spinorbital, hvalrho_spinorbital, rhoss_spinorbital, &
     & detl_spinorbital, allow1_spinorbital, phi_spinorbital, phi2_spinorbital, A_spinorbital, &
@@ -618,14 +636,14 @@ module propa
         end if
 
         if ( flag_spinorbital == 0 ) then
-          write(fexpec,formatv1) tend*au2fs, (valreal(i),i=1,14)
+          write(fexpec,formatv1) tend*au2fs, (valreal(i),i=1,13)
           call flush(fexpec)
           call rdm1analysis(tend*au2fs, fentro,  nrorb*2, rho)
           flush(fentro)
         end if
 
         if ( flag_spinorbital == 1 ) then
-          write(fexpec_spinorbital,formatv1) tend*au2fs, (valreal_spinorbital(i),i=1,14)
+          write(fexpec_spinorbital,formatv1) tend*au2fs, (valreal_spinorbital(i),i=1,13)
           call flush(fexpec_spinorbital)
           call rdm1analysis(tend*au2fs, fentro_spinorbital,  nrorb_spinorbital, rho_spinorbital)
           flush(fentro_spinorbital)
@@ -814,12 +832,12 @@ module propa
             trrho2 = trrho2 + rho(is,js)*rho(js,is)
           enddo
         enddo
-        write(trrho2f,'(1(f8.3,1x),2(F15.10,2x))') tend*au2fs, dreal(trrho2), dimag(trrho2)
 
-        call flush(trrho2f)
 
         if (flag_spinorbital == 0) then
-
+          write(trrho2f,'(1(f8.3,1x),2(F15.10,2x))') tend*au2fs, dreal(trrho2), dimag(trrho2)
+          call flush(trrho2f)
+          
           call acfphi(phio, acfspf, nrorb, phi)
           write(37,'('//trim(npf)//'(f18.12))') tend*au2fs, (dreal(acfspf(in)), dimag(acfspf(in)),in=1,nrorb)
           call flush(37)
@@ -837,23 +855,46 @@ module propa
       !!!> END OF PROPAGATION LOOP
 
       if (logwavef) then
-        close(indepA)
-        close(indepA_spinorbital)
+        if (flag_spinorbital == 0) then
+          close(indepA)
+        end if
+
+        if (flag_spinorbital == 1) then
+          close(indepA_spinorbital)
+        end if
+
 ! IU: These need to be fixed to correct units
         close(38)
         close(39)
         close(40)
         close(41)
-        close(wavee_f)
+
+        if (flag_spinorbital == 0) then
+          close(wavee_f)
+        end if
+
+        if (flag_spinorbital == 1) then
+          close(wavee_f_spinorbital)
+        end if
+ 
+
         close(waven_f)
       endif
       if (logev) close(43)
-      close(fexpec)
-      close(fexpec_spinorbital)
+
+
+      if (flag_spinorbital == 0) then
+          close(fexpec)
+          close(trrho2f)
+      end if
+
+      if (flag_spinorbital == 1) then
+          close(fexpec_spinorbital)
+          close(trrho2f_spinorbital)
+      end if    
+
       close(31)
       close(35)
-      close(trrho2f)
-      close(trrho2f_spinorbital)
       open(newunit=fpsi,file="finalpsi")
       do i=1, nrindep*nrspf
         write(fpsi,'(2(e23.16,1x))') dreal(A(i)), dimag(A(i))
@@ -1202,9 +1243,11 @@ module propa
       fac  = max(1.0_dp/facinc, min(1.0_dp/facdec, fac/0.90_dp))
       hnew = h/fac
       if (err < 1.0_dp) then
+
         write(31,*) t*au2fs, h*au2fs
         t = t + h
         h = hnew
+
         lreject = .false.
         if ( dabs(dreal(imagt) - 1.0_dp) > thresh_time_zero ) then
           call mapformat(k5, 1_i64, dgldim_input, nrindep_input, &
@@ -1222,9 +1265,9 @@ module propa
         facold = max(err,1.0d-4)
 
       else
-
         hnew   = h/min(1.0_dp/facdec,fac1/0.90_dp)
         h = hnew
+
         lreject = .true.
         if (h < 1.0d-10) then
           write(*,*) "Time-step too small!!! tstep =  ", h
@@ -1727,7 +1770,7 @@ module propa
           if (freeze_nuc) then
             phin2(ix,i) = c0
           else
-            phin2(ix,i) = -ci*imagt*phin2(ix,i)
+            phin2(ix,i) = -ci*imagt*phin2(ix,i)*dr
           endif
         enddo
       enddo
@@ -3390,11 +3433,9 @@ module propa
           norm = norm + dconjg(phi_input(j,i))*phi_input(j,i)
         enddo
         norm = dsqrt(norm)
+
         do j=1, nrprime
           phi_input(j,i) = phi_input(j,i)/norm
-        enddo
-        do j=1, nrprime
-          norm = norm + dconjg(phi_input(j,i))*phi_input(j,i)
         enddo
 
       enddo
@@ -3406,6 +3447,7 @@ module propa
           norm = norm + dconjg(phin(j,i))*phin(j,i)
         enddo
         norm = dsqrt(norm*dr)
+
         do j=1, nrprimn
           phin(j,i) = phin(j,i)/norm
         enddo
