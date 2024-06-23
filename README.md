@@ -1,6 +1,6 @@
-![License: MIT](https://img.shields.io/github/license/iulusoy/MCEND)
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/iulusoy/MCEND/CI.yml?branch=main)
-![Language](https://img.shields.io/github/languages/top/iulusoy/MCEND)
+![License: MIT](https://img.shields.io/github/license/MCEND-hub/MCEND)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/MCEND-hub/MCEND/CI.yml?branch=main)
+![Language](https://img.shields.io/github/languages/top/MCEND-hub/MCEND)
 # MCEND
 MCEND (multi-configuration electron-nuclear dynamics) is a quantum dynamics code for simultaneous propagation of electrons and nuclei, written in Fortran90.
 
