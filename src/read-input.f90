@@ -46,18 +46,14 @@
 !! @param nel no of electrons
 !! @param nrprimn no of nuclear grid points
 !! @param nrspf number of single particle functions
-!! @param nrprimn_poly a list of nrprimn for each dof, N.B., to be merged
 !! @param nrorb no of orbitals
 !! @param nrorb_fc frozen core orbitals, same as nrfrorb
-!! @param nrorb_fv frozen virtual orbitals, not tested yet
 !! @param nrensp number of explicit nuclear sampling points
 !! @param nrindep nr of independent A-vector elements
 !! @param inigrid starting point on nuclear grid
 !! @param mul multiplicity - not yet used
-!! @param basis use precomputed basis or moving basis for electrons
-!! moving basis implementation was not successful so far
+!! @param basis use precomputed basis 
 !! basis = 1 precomputed basis at nrensp positions
-!! basis = 2 atom-centered basis, nrensp=nrprimn
 !! @param restart read in initial state? (2 => restart, 0 => no restart, 1 => generate additional SPF)
 !! @param aucofu autocorrelation function? (0=no, 1=yes, 2=after lpw, please add the additional options that are missing here)
 !! @param numthreads how many openmp threads to use
@@ -91,13 +87,11 @@
 !! @param use_wcap use the nuclear CAP
 !! @param autoshifte shift the energy towards zero automatically
 !! @param do_openshell control open-shell unrestricted or closed-shell restricted methods
-!! @param do_polyatomics control polyayomic module, debug at this stage
 !! @param mf_reduction move one particle operator, so far Te, outside meanfields
 !! @param nrpulses number of pulses, determined from pulse params
 !! @param nsz number of parallel electrons
 !! @param flag_spinorbital similar to do_openshell, used in previous version; may be extended beyond 0/1 for configuration state function (CSF) approach
-!! @param flag_poly polyatomic version or not, in progress
-!! @param flag_fc, flag_fv control frozen core (works) and frozen virtual(not working)
+!! @param flag_fc controls frozen core
 !! @param print_level control print level for intermediate wall time
 module inputvars
   use params
@@ -121,13 +115,11 @@ module inputvars
       integer :: nel_alpha, nel_beta
       integer :: nel_spinorbital
       integer :: nrprimn, nrspf
-      integer, allocatable :: nrprimn_poly(:)
       integer :: nrorb
       integer :: nrorb_alpha, nrorb_beta
       integer :: nrorb_spinorbital
       integer :: nrorb_init_alpha, nrorb_init_beta
       integer :: nrorb_fc, nrorb_fc_spinorbital
-      integer :: nrorb_fv, nrorb_fv_spinorbital
       integer :: nrensp
       integer :: nrindep
       integer :: nrindep_spinorbital
@@ -154,7 +146,6 @@ module inputvars
       integer(i32) :: numthreads
       integer :: hmfsize
       real(dp) :: dr, rmin
-      real(dp), allocatable :: dr_poly(:), rmin_poly(:)
       real(dp) :: tfin0
       real(dp) :: t_initial
       real(dp) :: tout0
@@ -163,12 +154,9 @@ module inputvars
       real(dp), allocatable :: lfreq(:)
       real(dp), allocatable :: lpolar(:,:)
       real(dp) :: m2, m1
-      real(dp), allocatable :: m_poly(:)
       real(dp) :: N2, N1
-      real(dp), allocatable  :: N_poly(:)
       real(dp) :: A2N, A1N
-      real(dp), allocatable  ::  A_poly(:)
-      real(dp) :: massn, massn_poly, massn_poly_denominator, massn_poly_numerator
+      real(dp) :: massn
       integer :: ndof
       integer :: nint2e
       integer :: hmfscale
@@ -188,13 +176,11 @@ module inputvars
       logical :: use_wcap
       logical :: autoshifte
       logical :: do_openshell
-      logical :: do_polyatomics
       logical :: mf_reduction
       integer :: nrpulses
       integer ::  nsz
       integer :: flag_spinorbital
-      integer :: flag_poly
-      integer :: flag_fc, flag_fv
+      integer :: flag_fc
       integer :: print_level
 
     contains
@@ -214,6 +200,7 @@ module inputvars
       integer :: scfvals
       real(dp), allocatable :: scf_temp(:)
       character(1) :: line
+      character(255) :: line_temp
       character(100), allocatable :: charvars(:)
       character(100), allocatable :: linevars(:)
       character(6), allocatable :: lineoutvars(:)
@@ -297,7 +284,8 @@ module inputvars
       ! read in character variables
       k = 1
       do j = nrownum+1, nrownum2-1
-        read(inputio,*) keywargs(j), temp, charvars(k)
+        read(inputio,'(A)') line_temp !keywargs(j), temp, charvars(k) 
+        call read_entries(line_temp, keywargs(j), temp, charvars(k)) 
         k = k + 1
       enddo
 
@@ -323,7 +311,6 @@ module inputvars
       nrfrorb = 0
       wgrid = 0.0_dp
       ! hard-coding this to always use static basis set until development resumes
-      ! for moving basis set or we give up on that route
       basis = 1
       shifte = 0.0_dp
       !default singlet
@@ -337,15 +324,12 @@ module inputvars
 
       nrorb_fc = 0
       nrorb_fc_spinorbital = 0
-      nrorb_fv = 0
-      nrorb_fv_spinorbital = 0
       ! default parameters
       flag_spinorbital = 0
-      flag_poly = 0
       nsz = 0
       print_level = 0
 
-      write (*,*) 'nrownum', nrownum
+     ! write (*,*) 'nrownum', nrownum
 
       do i=1, nrownum - 1
         ! more often read from basis set information
@@ -386,10 +370,6 @@ module inputvars
           etan = dble(inpvars(i))
         elseif (trim(keywargs(i)) == 'worder') then
           bn = int(inpvars(i))
-        !> omitting moving basis set options until it can be revisited
-  !      elseif (trim(keywargs(i)) == 'basis') then
-  !        basis = int(inpvars(i))
-  !        basis = 1
         elseif (trim(keywargs(i)) == 'restart') then
           restart = int(inpvars(i))
         elseif (trim(keywargs(i)) == 'aucofu') then
@@ -402,25 +382,10 @@ module inputvars
           t_initial = dble(inpvars(i))
         elseif (trim(keywargs(i)) == 'tout0') then
           tout0 = dble(inpvars(i))
-        elseif (trim(keywargs(i)) == 'N') then
-          lineoutvars = string_to_integers(linevars(i), ' ')
-          allocate(N_poly(size(lineoutvars)-2))
-          do j=3, size(lineoutvars)
-              read( lineoutvars(j), * ) N_poly(j-2)
-          end do
-          write (*,*) 'N_poly', N_poly
         elseif (trim(keywargs(i)) == 'N1') then
           N1 = inpvars(i)
         elseif (trim(keywargs(i)) == 'N2') then
           N2 = inpvars(i)
-        elseif (trim(keywargs(i)) == 'A') then
-          lineoutvars = string_to_integers(linevars(i), ' ')
-          allocate(A_poly(size(lineoutvars)-2))
-          do j=3, size(lineoutvars)
-              read( lineoutvars(j), * ) A_poly(j-2)
-          end do
-          write (*,*) 'A_poly', A_poly
-
         !> specify the neutron mass
         elseif (trim(keywargs(i)) == 'A1N') then
           A1N = inpvars(i)
@@ -438,7 +403,7 @@ module inputvars
         elseif (trim(keywargs(i)) == 'print_level') then
           !> 0: fewer print; 1: print time for intermediate steps
           print_level = int(inpvars(i))
-          write (*,*) 'print_level', print_level
+         ! write (*,*) 'print_level', print_level
         endif
 
 
@@ -523,16 +488,6 @@ module inputvars
             !do_openshell = .false.
             flag_spinorbital = 0
           endif
-        elseif (trim(keywargs(j)) == 'do_polyatomics') then
-          if (trim(charvars(i)) == 'yes') then
-             do_polyatomics = .true.
-             !=2 for freezing some dof? e.g., embedding?
-             flag_poly = 1
-          else
-            !do_openshell = .false.
-            do_polyatomics = .false.
-            flag_poly = 0
-          endif
   !      elseif (trim(kewargs(j)) == 'basis_path') then
   !        basis_path_dir = charvars(i)
         elseif (trim(keywargs(j)) == 'mf_reduction') then
@@ -546,7 +501,14 @@ module inputvars
 
 
       !> get current working directory
-      intdir = 'basis_library/'//trim(intdir)
+
+
+      if ( index(intdir, '.') == 0 .or. index(intdir, '/') == 0 ) then
+          intdir = 'basis_library/'//trim(intdir)
+      else
+          intdir = trim(intdir)   
+      endif
+
       scfv_path = trim(intdir)//'/scf-guess-'//trim(cmpdname)//'.dat'
       n2int_path = trim(intdir)//'/info-'//trim(cmpdname)//'.dat'
       rspfile = trim(intdir)//'/rsp_'//trim(cmpdname)
@@ -556,9 +518,6 @@ module inputvars
       read(20,*) temp2, temp, ndof
       if (temp2 == 'ndof') then
         ndof = ndof
-        if (ndof > 1) then
-          flag_poly = 1
-        end if
         read(20,*) temp2, temp, nint2e
       !adopt the previous version, only for diatomics
       ! if I evolve all format into polyatomic, the code could be more concise
@@ -571,48 +530,25 @@ module inputvars
         stop
       end if
 
-      write (*,*) 'dof check', ndof
-      allocate(nrprimn_poly(ndof))
-      allocate(rmin_poly(ndof))
-      allocate(dr_poly(ndof))
+    !  write (*,*) 'dof check', ndof
+
 
       ! so far, the precomputed basis for polyatomic is merged so to speak
       ! a single nrprime, for combinational positions
       read(20,*) temp2, temp, nrprime
-      !again, to change or not to changel; do_polyatomics or flag_poly
-      !it seems by ndof to control is better
-      !if I change nrprimn into an array, the subsequent section needs to be changed
-      !keep it for a while
-      !then merge
-      !it should, not rhf vs uhf
-      if (flag_poly == 0 .and. ndof > 1 ) then
-        write (*,*) 'more than 1 dof using diatomic module'
-        write (*,*) 'calculation stops'
+
+      if (ndof > 1) then
+        write (*,*) 'more than 1 dof, calculation stops'
         stop
       end if
 
-      ! will merge into a more unified framework
-      ! test phase to keep existing modules
-      ! let me know if there is a better stragety
-      if (flag_poly == 0) then
-        read(20,*) temp2, temp, nrprimn
-        !for double check
-        nrprimn_poly(ndof) = nrprimn
-      else
-        ! in poly mode, auto use _poly variable
-        read(20,*) temp2, temp, (nrprimn_poly(in), in=1,ndof)
-      end if
+
+      read(20,*) temp2, temp, nrprimn
       read(20,*) temp2, temp, nrensp
 
-      if (flag_poly==0) then
-        read(20,*) temp2, temp, rmin
-        read(20,*) temp2, temp, dr
-        rmin_poly(ndof) = rmin
-        dr_poly(ndof)   = dr
-      else
-        read(20,*) temp2, temp, (rmin_poly(in), in=1,ndof)
-        read(20,*) temp2, temp, (dr_poly(in), in=1,ndof)
-      end if
+      read(20,*) temp2, temp, rmin
+      read(20,*) temp2, temp, dr
+
 
       close(20)
 
@@ -646,14 +582,6 @@ module inputvars
       m1 = N1*proelec_mratio + A1N*neutron_elec_mratio
       m2 = N2*proelec_mratio + A2N*neutron_elec_mratio
 
-      if (flag_poly == 1) then
-        write (*,*) 'check N_poly', size(N_poly), N_poly
-
-        allocate(m_poly(size(N_poly)))
-        do i=1, size(N_poly)
-          m_poly(i) = N_poly(i)*proelec_mratio + A_poly(i)*neutron_elec_mratio
-        end do
-      end if
 
       nel_alpha = (nel + nsz)/2
       nel_beta  = (nel - nsz)/2
@@ -717,8 +645,8 @@ module inputvars
       ! in MCEND, odd and even number represent alpha and beta electrons
       nrindep = nint(combinatorial(2*nrorb, nel))
       nrindep_spinorbital = nint(combinatorial(nrorb_spinorbital, nel_spinorbital))
-      nrindep_frzorb = nint(combinatorial(2*nrorb - 2*nrorb_fc - 2*nrorb_fv, nel- 2*nrorb_fc))
-      nrindep_frzorb_spinorbital = nint(combinatorial(nrorb_spinorbital - nrorb_fc_spinorbital - nrorb_fv_spinorbital, &
+      nrindep_frzorb = nint(combinatorial(2*nrorb - 2*nrorb_fc, nel- 2*nrorb_fc))
+      nrindep_frzorb_spinorbital = nint(combinatorial(nrorb_spinorbital - nrorb_fc_spinorbital, &
 & nel - nrorb_fc_spinorbital))
 
 ! active frozen core
@@ -728,21 +656,7 @@ module inputvars
       !> ISOMASS
       massn = (m2*m1)/(m2 + m1)
 
-      ! polymass?
-      ! merge or not
-      if (flag_poly==1) then
 
-        massn_poly_numerator   = 1.0_dp
-        massn_poly_denominator = 0.0_dp
-
-        do i=1, size(N_poly)
-          massn_poly_numerator   = massn_poly_numerator * m_poly(i)
-          massn_poly_denominator = massn_poly_denominator + m_poly(i)
-        end do
-
-        massn_poly = massn_poly_numerator/massn_poly_denominator
-
-      end if
       dgldim = nrindep*nrspf + nrorb*nrprime + nrspf*nrprimn
       dgldim_spinorbital = nrindep_spinorbital*nrspf + nrorb_spinorbital*nrprime + nrspf*nrprimn
       hmfsize = hmfscale*nrindep
@@ -753,25 +667,25 @@ module inputvars
       max_nrindep_2_spinorbital = nint(combinatorial(nrorb_spinorbital, nel-2))
 
       if (nrorb_fc == 0) then
-        max_nrindep_frzorb = nint(combinatorial(2*nrorb-2*nrorb_fv, nel-1))
-        max_nrindep_2_frzorb = nint(combinatorial(2*nrorb-2*nrorb_fv, nel-2))
+        max_nrindep_frzorb = nint(combinatorial(2*nrorb, nel-1))
+        max_nrindep_2_frzorb = nint(combinatorial(2*nrorb, nel-2))
       else
       ! if 2e excited, no way to combine 1e back, the substraction part corresponds to the entries of this possibility
-        max_nrindep_frzorb = nint(combinatorial(2*nrorb-2*nrorb_fv, nel-1) &
-        &- combinatorial(2*nrorb - 2*nrorb_fc -  2*nrorb_fv, nel-1) )
-        max_nrindep_2_frzorb = nint(combinatorial(2*nrorb-2*nrorb_fv, nel-2)  &
-        &- combinatorial(2*nrorb - 2*nrorb_fc -  2*nrorb_fv - 1, nel-2) )
+        max_nrindep_frzorb = nint(combinatorial(2*nrorb, nel-1) &
+        &- combinatorial(2*nrorb - 2*nrorb_fc, nel-1) )
+        max_nrindep_2_frzorb = nint(combinatorial(2*nrorb, nel-2)  &
+        &- combinatorial(2*nrorb - 2*nrorb_fc - 1, nel-2) )
       end if
 
       if (nrorb_fc_spinorbital == 0) then
-        max_nrindep_frzorb_spinorbital = nint(combinatorial(nrorb_spinorbital - nrorb_fv_spinorbital, nel-1))
-        max_nrindep_2_frzorb_spinorbital = nint(combinatorial(nrorb_spinorbital - nrorb_fv_spinorbital, nel-2))
+        max_nrindep_frzorb_spinorbital = nint(combinatorial(nrorb_spinorbital, nel-1))
+        max_nrindep_2_frzorb_spinorbital = nint(combinatorial(nrorb_spinorbital, nel-2))
       else
-        max_nrindep_frzorb_spinorbital = nint(combinatorial(nrorb_spinorbital - nrorb_fv_spinorbital, nel-1) &
-        &- combinatorial(nrorb_spinorbital - nrorb_fc_spinorbital - nrorb_fv_spinorbital, nel-1))
+        max_nrindep_frzorb_spinorbital = nint(combinatorial(nrorb_spinorbital, nel-1) &
+        &- combinatorial(nrorb_spinorbital - nrorb_fc_spinorbital, nel-1))
 
-        max_nrindep_2_frzorb_spinorbital = nint(combinatorial(nrorb_spinorbital-nrorb_fv_spinorbital, nel-2) &
-        &- combinatorial(nrorb_spinorbital - nrorb_fc_spinorbital - nrorb_fv_spinorbital - 1, nel-2))
+        max_nrindep_2_frzorb_spinorbital = nint(combinatorial(nrorb_spinorbital, nel-2) &
+        &- combinatorial(nrorb_spinorbital - nrorb_fc_spinorbital - 1, nel-2))
       end if
 
       ! frzorb is for correlation, not orbital optimization
@@ -947,6 +861,43 @@ module inputvars
         endif
 
       end subroutine int2str
+
+
+
+
+
+      subroutine read_entries(input_line, var_1, var_2, var_3)
+        implicit none
+        character(len=*), intent(in)  :: input_line
+        character(len=*), intent(out)  :: var_1, var_2, var_3
+        character(len=255) :: temp_line
+        integer :: i
+    
+        i = index(input_line, ' ') 
+        if (i > 0) then
+            var_1 = input_line(1: i - 1)
+            temp_line = input_line(i + 1: )
+        end if    
+    
+        i = index(temp_line, ' ') 
+        if (i > 0) then
+            var_2 = temp_line(1: i - 1)
+            var_3 = temp_line(i + 1: )
+        end if    
+    
+     !   write (*,*) var_1, var_2, var_3
+    
+      end subroutine read_entries
+    
+    
+    
+    
+
+
+
+
+
+
 
 ! from stackoverflow
 ! https://stackoverflow.com/questions/30006834/reading-a-file-of-lists-of-integers-in-fortran/30007516?noredirect=1#comment119141841_30007516

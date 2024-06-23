@@ -555,29 +555,7 @@ module utils
 
   end subroutine
 
-  real(dp) function ssquare(cis)
-
-    implicit none
-    real(dp) ::  na, nb
-    integer :: cis, ie
-
-    na = 0.0_dp
-    nb = 0.0_dp
-    do ie=1,nel
-      ! if the modulus of detl((cis - 1)*nel + ie) is divisible by 2
-      if (mod(detl((cis-1)*nel+ie),2) == 0) then
-        ! add one to beta
-        nb = nb + 1.0_dp
-      else
-        ! if not add one to alpha
-        na = na + 1.0_dp
-      endif
-    enddo
-
-    ssquare = ((na - nb)/2.0_dp)*((na - nb)/2.0_dp + 1.0_dp)
-
-    return
-  end function
+  
 
 !> to verify matrix inverse of rho and overlap
   subroutine matrix_multiplication(a,b,c,dim_m)
@@ -893,7 +871,6 @@ module utils
 
   ! flag/res = 1 means violation of frozen orbital condition
     flag_fc = 0
-    flag_fv = 0
     counter_fc = 0
 
     do i = 1, nel
@@ -901,19 +878,15 @@ module utils
          counter_fc = counter_fc +1
        end if
 
-       if ( iarr(i) > nrorb*2 - nrorb_fv*2 ) then
-         flag_fv = 1
-       end if
     end do
 
     if (counter_fc .ne. nrorb_fc*2 )  then
        flag_fc = 1
     end if
 
-    if (flag_fc == 0 .and. flag_fv == 0 ) then
+    if (flag_fc == 0) then
       res = 0
     else
-      write (*,*) 'warning detl fc inconsistent'
       res = 1
     end if
 
@@ -926,7 +899,6 @@ module utils
 
   ! flag/res = 1 means violation of frozen orbital condition
     flag_fc = 0
-    flag_fv = 0
     counter_fc = 0
 
     do i = 1, nel-1
@@ -934,9 +906,7 @@ module utils
          counter_fc = counter_fc +1
        end if
 
-       if ( iarr(i) > nrorb*2 - nrorb_fv*2 ) then
-         flag_fv = 1
-       end if
+
     end do
 
     ! =nnumber of fc, =number fc-1 both ok
@@ -945,10 +915,10 @@ module utils
        flag_fc = 1
     end if
 
-    if (flag_fc == 0 .and. flag_fv == 0 ) then
+    if (flag_fc == 0) then
       res = 0
     else
-      write (*,*) 'warning detl fc inconsistent'
+     ! write (*,*) 'warning detl fc inconsistent'
       res = 1
     end if
 

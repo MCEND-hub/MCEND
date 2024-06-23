@@ -27,7 +27,7 @@
       complex(dp) :: scme3(nrprimn)
       complex(dp) :: scme2
       complex(dp) :: val_input(13)
-      real(dp)    :: valreal_input(14)
+      real(dp)    :: valreal_input(13)
       integer     :: is, i1s, i1r, vorz
       integer     :: nrdiff, ms, ps, qs, ns, alpha, i, j, l, idet, jdet
       integer     :: l1r, l1s,  ix
@@ -49,8 +49,6 @@
         csum = csum + rho_input(is,is)
       enddo
 
-      val_input(1) = val_input(1)*csum
-
       valreal_input(1) = dreal(val_input(1))
 
       do i1s=1, nrorb_spinorbital_input
@@ -65,7 +63,7 @@
           else
             l1r =  l1s
           end if
-          val_input(2:4) = val_input(2:4) - rho_input(i1s,l1s)*hel_input(i1r,l1r,2:4)*deltaspin(i1s,l1s) !* nel
+          val_input(2:4) = val_input(2:4) - rho_input(i1s,l1s)*hel_input(i1r,l1r,2:4)*deltaspin(i1s,l1s) 
         enddo
       enddo
 
@@ -79,7 +77,7 @@
         enddo
       enddo
 
-      valreal_input(5) = dreal(val_input(5))*dr
+      valreal_input(5) = dreal(val_input(5))*dr/dreal(val_input(1))
 
       ! energies
       ! kinetic
@@ -96,18 +94,18 @@
             l1r = l1s
           end if
           val_input(6) = val_input(6) + rho_input(i1s,l1s)*hel_input(i1r,l1r,1)*deltaspin(i1s,l1s)
+
         enddo
       enddo
 
-      valreal_input(6) = nel*dreal(val_input(6))
-      val_input(6) = val_input(6)/dreal(val_input(1))
+      valreal_input(6) = nel*dreal(val_input(6))/dreal(val_input(1))
 
       do i=1, nrspf
         do j=1, nrspf
           val_input(7) = val_input(7) + heln(i,j,1)*rhon(j,i)
         enddo
       enddo
-      valreal_input(7) = dreal(val_input(7))
+      valreal_input(7) = dreal(val_input(7))/dreal(val_input(1))
 
       ! repulsion terms
       do idet=1, nrindep_input
@@ -115,10 +113,14 @@
           call maxcoinc(idet,jdet,vorz,nrdiff,ms,ns,ps,qs, detl_input, nrindep_input)
           call sc2(nrdiff,idet,jdet,ms,ns,ps,qs,vorz,scme2, detl_input, nrindep_input,&
   & hel2_input, nrorb_input)
+
           do j=1, nrspf
+
             val_input(8) = val_input(8) + dconjg(A_input(idet+(j-1)*nrindep_input)) &
   & *A_input(jdet+(j-1)*nrindep_input)*scme2
+
           enddo
+
         enddo
       enddo
 
@@ -130,7 +132,7 @@
         enddo
       enddo
 
-      valreal_input(9) = dreal(val_input(9))
+      valreal_input(9) = dreal(val_input(9))/dreal(val_input(1))
 
       ! electron-nuclear attraction
       do idet=1, nrindep_input
@@ -158,9 +160,9 @@
         enddo
       enddo
 
-      valreal_input(10) = dreal(val_input(10))
+      valreal_input(10) = dreal(val_input(10))/dreal(val_input(1))
       valreal_input(11) = sum(valreal_input(6:10))
-      val_input(13) = c0
+      val_input(12) = c0
       if (aucofu /= 0) then
         if (flag_spinorbital==0) then
           val_input(13) = overlap(Ao_input,phio_input, phino, nrorb_input, nrindep_input, detl_input, phi_input,&
@@ -171,8 +173,8 @@
           & A_input)
         end if
       endif
-      valreal_input(13) = dreal(val_input(13))
-      valreal_input(14) = aimag(val_input(13))
+      valreal_input(12) = dreal(val_input(13))
+      valreal_input(13) = aimag(val_input(13))
 
       return
 
