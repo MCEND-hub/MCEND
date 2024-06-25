@@ -501,13 +501,14 @@ module inputvars
 
 
       !> get current working directory
-
-
-      if ( index(intdir, '.') == 0 .or. index(intdir, '/') == 0 ) then
-          intdir = 'basis_library/'//trim(intdir)
+      if ( intdir(1:1)  == '.' .or.  intdir(1:1) == '/' ) then  
+        intdir = trim(intdir)   
       else
-          intdir = trim(intdir)   
+        intdir = 'basis_library/'//trim(intdir)
       endif
+
+
+
 
       scfv_path = trim(intdir)//'/scf-guess-'//trim(cmpdname)//'.dat'
       n2int_path = trim(intdir)//'/info-'//trim(cmpdname)//'.dat'
