@@ -36,7 +36,13 @@ The source code compiles and runs on linux and MacOS, it has not been tested on 
 
 ## MCEND basis library
 
-In order to run MCEND, you need to install the [basis library]().
+In order to run MCEND, you need to install the [basis library](https://github.com/MCEND-hub/MCEND-library). Either clone the library directly into a directory of your choice, or use it through the provided [git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules). In order to check out the files of the submodule, either clone MCEND directly using the `--recursive` flag, or type
+```
+git submodule update --init --recursive
+```
+in your terminal within the MCEND folder. You should then find all the basis set files inside `MCEND-library/basis_library/`.
+
+To provide the directory of the basis set files, you can also set a symlink that points to the folder.
 
 ## Developer's documentation
 The source code documentation can be build on your local machine using

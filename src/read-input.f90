@@ -203,11 +203,10 @@ module inputvars
       character(255) :: line_temp
       character(100), allocatable :: charvars(:)
       character(100), allocatable :: linevars(:)
-      character(6), allocatable :: lineoutvars(:)
       character(50), allocatable :: keywargs(:)
       character(50), allocatable :: keywargs2(:)
       real(dp), allocatable :: inpvars(:)
-      integer :: in, natom
+      integer :: natom
 
       call get_environment_variable("PWD", mcend_top)
 

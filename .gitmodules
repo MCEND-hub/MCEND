@@ -1,0 +1,3 @@
+[submodule "MCEND-library"]
+	path = MCEND-library
+	url = https://github.com/MCEND-hub/MCEND-library.git

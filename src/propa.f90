@@ -149,7 +149,6 @@ module propa
       real(dp)    :: valreal(13)
       real(dp)    :: valreal_spinorbital(13)
       real(dp)    :: dt, tbeg, tend, facold, t_init
-      real(dp)    :: facold_spinorbital
       real(dp)    :: tfin, tout, ef(3)
       real(dp)    :: npn(nrspf)
       real(dp)    :: npn_spinorbital(nrspf)
@@ -167,7 +166,7 @@ module propa
       integer :: efieldf
       integer :: efieldf_spinorbital
       integer :: trrho2f
-      integer :: trrho2f_spinorbital, flag_print, spsi_0, fpsi_0, fpsi_spinorbital_0
+      integer :: trrho2f_spinorbital, flag_print, spsi_0, fpsi_spinorbital_0
       real(dp)     :: rep(nrorb), imp(nrorb), rea, ima, wtime_1
       real(dp)     :: rep_spinorbital(nrorb_spinorbital),imp_spinorbital(nrorb_spinorbital), rea_spinorbital, ima_spinorbital
 
@@ -953,7 +952,6 @@ module propa
       real(dp) :: npn_input(nrspf)
       real(dp) :: tend, tbeg, h, facold, expo1
       real(dp) ::  fac, fac1, err, err2, deno, wt(dgldim_input), hnew, t
-      integer ::  i,  is
       logical :: lreject
       integer     :: nrindep_input, nrorb_input, nrorb_spinorbital_input, &
       & max_nrindep_input, allow1_input(max_nrindep_input*(nel-1),0:6*nrorb_input), detl_input(nel*nrindep_input), &
@@ -1361,7 +1359,7 @@ module propa
       complex(dp) :: neham(nrindep_input,nrindep_input)
       real(dp) ::  ef(3), t
       integer :: idet, jdet, vorz, nrdiff, ms, ps, ns, qs
-      integer :: aa, alpha, l, i, j,  sum_sz_tmp
+      integer :: aa, alpha, l, j,  sum_sz_tmp
       integer :: nrindep_input, nrorb_input
       integer :: detl_input(nel*nrindep_input)
       complex(dp) :: hel_input(nrorb_input,nrorb_input,5+nrensp), hel2_input(nrorb_input,nrorb_input,nrorb_input,nrorb_input), &
@@ -1977,7 +1975,7 @@ module propa
       jobz = "V"
       uplo = "U"
       lwork = 3*dim_ovl
-
+      info = 0
       call zheev(jobz,uplo,dim_ovl,ovl,dim_ovl,w,work,lwork,rwork,info)
 
       if (info /= 0) then
@@ -2016,7 +2014,7 @@ module propa
       jobz = "V"
       uplo = "U"
       lwork = 3*nrspf
-
+      info=0
       call zheev(jobz,uplo,nrspf,ovl,nrspf,w,work,lwork,rwork,info)
 
       if (info /= 0) then
@@ -2076,7 +2074,6 @@ module propa
       & im_hel_vector_temp(:), re_phi_input(:,:), im_phi_input(:,:), re_vector_temp(:), im_vector_temp(:), &
       & re_hel2a(:,:,:,:), im_hel2a(:,:,:,:), re_hel2a_2(:,:,:,:), im_hel2a_2(:,:,:,:)
       complex(dp), allocatable :: vector_temp(:), hel_vector_temp(:) !, combine_hel2a(:,:,:,:), combine_hel2a_2(:,:,:,:)
-      real(dp) :: ddot
       integer :: nthr, nstart, nend
 
       save dens_input
@@ -2641,6 +2638,10 @@ module propa
       jobz = "V"
       uplo = "U"
       lwork_input = 3*nrorb_spinorbital_input
+      w_input(:) = 0.0_dp
+      rwork_input(:) = 0.0_dp
+      work_input(:) = c0
+      info = 0
       if (.not. allocated(rhoh_input)) allocate(rhoh_input(nrorb_spinorbital_input, nrorb_spinorbital_input))
       rhoh_input(:,:) = - rho_input(:,:)
 
@@ -2725,7 +2726,10 @@ module propa
       jobz = "V"
       uplo = "U"
       lwork = 3*nrspf
-
+      rwork(:) = 0.0_dp
+      w(:) = 0.0_dp
+      work(:) = c0
+      info = 0
       rhoh(:,:) = -rhon(:,:)
 
       call zheev(jobz,uplo,nrspf,rhoh,nrspf,w,work,lwork,rwork,info)

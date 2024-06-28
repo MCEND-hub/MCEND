@@ -304,9 +304,7 @@
       subroutine initstuff()
 
       implicit none
-        real(dp) ::  blub
         real(dp) ::  dk
-        integer :: cjs, cls, je
         integer :: iarr(nel)
         integer :: iarr_spinorbital(nel), iarr3_spinorbital(nel)
         integer :: iarr_shdl(nel-1)
@@ -322,10 +320,9 @@
         integer :: nexcit_spinorbital
         integer :: nexcit2
         integer :: nexcit2_spinorbital
-        integer :: vorz, ind, lr, ie, ie2
+        integer :: vorz, ind, lr, ie
         integer :: vorz2, ind2, cis, js ! bookkeeping vectors
         integer ::  cid
-        integer :: larr(nel,nel,nel), jarr(nel), indflag(nel,nel)
         integer :: iarr3(nel)
         integer :: ms, ns, ps, qs
         integer :: nrdiff, jr, ds
@@ -337,7 +334,6 @@
         integer :: allowlist_spinorbital(nrorb_spinorbital-(nel-1))
         integer :: hmfcounter, hmfcounter2
         integer :: hmfcounter_spinorbital, hmfcounter2_spinorbital
-        integer :: fhmf_spinorbital1,fhmf_spinorbital2
         integer :: flag_frzorb
         character(len=10) :: ncol
         character(len=1)  :: ncol2
@@ -1104,13 +1100,13 @@
         real(dp)     :: rep(nrorb), imp(nrorb), rea, ima
         real(dp)     :: rep_spinorbital(nrorb_spinorbital),imp_spinorbital(nrorb_spinorbital), rea_spinorbital, ima_spinorbital
         integer(i64) :: planf, planb
-        integer      :: mu, nu, in, ix, jx
+        integer      :: mu, in, ix, jx
         integer      :: i, j
         integer      :: scfvals
         integer      :: fftw_forward=-1,fftw_backward=1
         integer      :: info, lwork
         integer      :: spsi
-        integer      :: init_coef_A, sum_sz_tmp, detl_spinorbital_count, nel_count, flag_print
+        integer      :: init_coef_A, sum_sz_tmp, detl_spinorbital_count, nel_count
         character(3) :: jobz, uplo, ncol
         character(3) :: nnn
 
