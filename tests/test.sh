@@ -1,5 +1,5 @@
 #!/bin/bash
-BINDIR=./bin
+BINDIR=../bin
 pycmd=python3
 TESTDIR=.
 

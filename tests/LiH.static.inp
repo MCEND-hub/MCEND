@@ -16,7 +16,7 @@ A1N = 3.0
 A2N = 0.0
 @chars
 compound = LiH
-intpath = integrals_LiH-bf32_dz
+intpath = ../../MCEND-library/basis_library/integrals_LiH-bf32_dz
 autoshifte = yes
 itimeprop = yes
 read_stand = no
