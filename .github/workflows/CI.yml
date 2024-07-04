@@ -19,7 +19,7 @@ jobs:
         os: [ubuntu-22.04]
         python-version: [3.11]
         toolchain:
-          # - {compiler: intel, version: '2023.2'}
+          - {compiler: intel, version: '2023.2'}
           - {compiler: intel-classic, version: '2021.10'}
         # exclude:
           # - os: macos-latest
@@ -56,10 +56,15 @@ jobs:
         # cd MCEND-library/basis_library/
         # echo "MCEND_BASIS_LIBRARY=$(pwd)" >> $GITHUB_ENV
     - name: compile MCEND - classic intel
+      if: matrix.toolchain.compiler == 'intel-classic'
       run: |
         make classic
     # - name: Run tests
       # run: |
         # cd tests
         # ./test.sh
+    - name: compile MCEND - ifx
+      if: matrix.toolchain.compiler == 'intel'
+      run: |
+        make
       
