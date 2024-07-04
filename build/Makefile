@@ -8,7 +8,7 @@ endif
 FFLAGS = -O3 -fopenmp -c -traceback -pg -integer-size 64 -real-size 64 -extend-source -fpe:0 -fpconstant
 LINK_FLAGS = -L${MKLLIB} -traceback -lfftw3 -liomp5 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 FFLAGS_classic = -fopenmp -c -fast -traceback -pg -i8 -r8 -extend-source -fpe0 -fpconstant
-LINK_FLAGS_classic = -qopenmp -L${MKLLIB} -traceback -Wl,--start-group -lfftw3 -liomp5 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+LINK_FLAGS_classic = -qopenmp -L${MKLLIB} -traceback -lfftw3 -liomp5 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 BINDIR=../bin
 SRCDIR=../src
