@@ -47,4 +47,8 @@ jobs:
     - name: compile MCEND - classic intel
       run: |
         make classic
+    - name: Run tests
+      run: |
+        cd tests
+        ./test.sh
       
