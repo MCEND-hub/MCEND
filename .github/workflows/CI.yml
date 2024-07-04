@@ -15,8 +15,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # os: [ubuntu-22.04,macos-latest]
-        os: [ubuntu-22.04]
+        os: [ubuntu-22.04,macos-latest]
+        # os: [ubuntu-22.04]
         python-version: [3.11]
         toolchain:
           - {compiler: intel, version: '2023.2'}
@@ -45,12 +45,17 @@ jobs:
         compiler: ${{ matrix.toolchain.compiler }}
         version: ${{ matrix.toolchain.version }}
         install_mkl: "true"
-    - name: install fftw3
+    - name: install fftw3 linux
+      if: runner.os == 'Linux'
       run: |
         sudo apt-get install libfftw3-dev
-    # - name: Install python dependencies for the tests
-      # run: |
-      #  python -m pip install uv
+    - name: install fftw3 mac
+      if: runner.os == 'macos-latest'
+      run: |
+        brew install fftw
+#    - name: Install python dependencies for the tests
+#      run: |
+#        python -m pip install uv
     - name: set basis library env var
       run: |
         cd MCEND-library/basis_library/
