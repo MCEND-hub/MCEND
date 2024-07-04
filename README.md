@@ -1,6 +1,8 @@
 ![License: MIT](https://img.shields.io/github/license/MCEND-hub/MCEND)
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/MCEND-hub/MCEND/CI.yml?branch=main)
 ![Language](https://img.shields.io/github/languages/top/MCEND-hub/MCEND)
+![Version](https://img.shields.io/github/v/tag/MCEND-hub/MCEND-tools)
+
 # MCEND
 MCEND (multi-configuration electron-nuclear dynamics) is a quantum dynamics code for simultaneous propagation of electrons and nuclei, written in Fortran90.
 
@@ -43,6 +45,12 @@ git submodule update --init --recursive
 in your terminal within the MCEND folder. You should then find all the basis set files inside `MCEND-library/basis_library/`.
 
 To provide the directory of the basis set files, you can also set a symlink that points to the folder.
+
+For the ease of use, set an `MCEND_BASIS_LIBRARY` environment variable to point to the MCEND basis set library. For example, in bash:
+```
+export MCEND_BASIS_LIBRARY="/User/username/MCEND-libary/basis_library
+```
+where you need to adapt the path accordingly.
 
 ## Developer's documentation
 The source code documentation can be build on your local machine using

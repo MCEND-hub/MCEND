@@ -299,7 +299,7 @@
 
       end subroutine
 
-!> This s=ubroutine initializes the wave functions, and constructs the hash-tables
+!> This subroutine initializes the wave functions, and constructs the hash-tables
 !! for the evaluation of Slater-Condon rules.
       subroutine initstuff()
 

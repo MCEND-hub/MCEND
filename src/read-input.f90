@@ -78,7 +78,8 @@
 !! @param initguessf initial guess file
 !! @param scfv_path path to the hmat file with values generated from orthog routine
 !! @param n2int_path path to the two electron integrals
-!! @param mcend_top path to the mcend code top
+!! @param mcend_top path to the current execution directory
+!! @param integral_library_env variable that points to the path of the integral library
 !! @param logwavef print wave function every tout?
 !! @param logev diagonalize the CI matrix to get energy eigenstates
 !! @param imagt imaginary time propagation (imagt=(1,0) => normal propagation) (imagt=(0,-1) => relaxation)
@@ -167,6 +168,7 @@ module inputvars
       character(300) :: scfv_path
       character(300) :: n2int_path
       character(300) :: mcend_top
+      character(300) :: integral_library_env
       character(300) :: path2ints
       logical :: logwavef
       logical :: logev
@@ -209,6 +211,7 @@ module inputvars
       integer :: natom
 
       call get_environment_variable("PWD", mcend_top)
+      call get_environment_variable("MCEND_BASIS_LIBRARY", integral_library_env)
 
       ! get the number of lines in a file w/o using a external bash call
       ios = 0
@@ -501,9 +504,15 @@ module inputvars
 
       !> get current working directory
       if ( intdir(1:1)  == '.' .or.  intdir(1:1) == '/' ) then  
-        intdir = trim(intdir)   
+        intdir = trim(intdir)
+        write(*,*) "Relative or absolute path to integral library detected", intdir
+      else if ( len(trim(integral_library_env)) >= 1 ) then
+        write(*,*) "Environment variable for integral library detected", integral_library_env
+        intdir = trim(integral_library_env)//'/'//trim(intdir)
       else
         intdir = 'basis_library/'//trim(intdir)
+        write(*,*) "Using MCEND legacy basis_library folder that needs to be &
+         & present in the current directory", intdir
       endif
 
 

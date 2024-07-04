@@ -103,5 +103,5 @@ ${pycmd} compare_expec_v2.py expec.t-lih-cs-acf-nofc expec.t-lih-cs-acf-ref
 # ${pycmd} compare_expec_v2.py expec_spinorbital.t-oh expec_spinorbital.t-oh-ref
 # 
 # 
-# 
-# 
+# TODO:
+# need to clean up after running tests
