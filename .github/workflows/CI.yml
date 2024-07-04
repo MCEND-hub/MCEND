@@ -27,8 +27,10 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4  
-      with:
-        submodules: recursive
+      # with:
+        # submodules: recursive
+    - name: checkout submodules
+      run: git submodule update --init --recursive
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
@@ -52,7 +54,7 @@ jobs:
     - name: set basis library env var
       run: |
         cd MCEND-library/basis_library/
-        export MCEND_BASIS_LIBRARY=$(pwd)
+        echo "MCEND_BASIS_LIBRARY=$(pwd)" >> $GITHUB_ENV
     - name: Run tests
       run: |
         cd tests
