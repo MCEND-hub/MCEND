@@ -720,8 +720,8 @@ module inputvars
       nrdhf_spinorbital  = max_nrindep_2_spinorbital
 
       write(*,'((a40,1x),(a7))') 'Compound: ', trim(cmpdname)
-      write(*,'((a40,1x),(a60))') 'Integral Folder: ', trim(intdir)
-      write(*,'((a40,1x),(a60))') 'Initial Hmat values read from: ', trim(scfv_path)
+      write(*,'((a40,1x),(a))') 'Integral Folder: ', trim(intdir)
+      write(*,'((a40,1x),(a))') 'Initial Hmat values read from: ', trim(scfv_path)
       write(*,'((a40,1x),(i7))') 'No. electronic bfn: ', nrprime
       write(*,'((a40,1x),(i7))') 'No. electrons: ', nel
       write(*,'((a40,1x),(i7))') 'No. molecular orbitals: ', 2*nrorb

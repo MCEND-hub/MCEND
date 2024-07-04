@@ -14,7 +14,7 @@ N1 = 3.0
 N2 = 1.0
 A1N = 3.0
 A2N = 0.0
-print_level = 1
+print_level = 0
 @chars
 compound = LiH
 intpath = integrals_LiH-bf32_dz

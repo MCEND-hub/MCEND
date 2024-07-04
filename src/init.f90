@@ -1113,11 +1113,13 @@
         if (restart == 2 .or. restart == 5) then
           nnn = stri(2*nrorb)
           if (flag_spinorbital==0) then
+          write(*,*) "Restart requested - reading from finalpsi"
             open(newunit=spsi,file="finalpsi")
             do i=1, nrindep*nrspf
               read(spsi,*) rea, ima
               A(i) = dcmplx(rea,ima)
             end do
+
 
             do mu=1, nrprime
               read(spsi,'('//stri(2*nrorb)//'(e23.16,1x))') (rep(in),in=1,nrorb), (imp(in),in=1,nrorb)
@@ -1137,6 +1139,7 @@
             close(spsi)
 
           else if (flag_spinorbital==1) then
+          write(*,*) "Restart requested - reading from finalpsi_spinorbital"
             open(newunit=spsi,file="finalpsi_spinorbital")
             do i=1, nrindep_spinorbital*nrspf
               read(spsi,*) rea_spinorbital, ima_spinorbital
