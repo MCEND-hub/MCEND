@@ -51,6 +51,7 @@ jobs:
 #        python -m pip install uv
     - name: compile MCEND - classic intel
       run: |
+        cd ..
         make classic
     - name: set basis library env var
       run: |
