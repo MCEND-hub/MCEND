@@ -3,59 +3,59 @@ BINDIR=../bin
 pycmd=python3
 TESTDIR=.
 
-# echo "***TEST: LiH static test no frozen core real time propagation to check energy conservation"
-# START_TIME=$SECONDS
-# ${BINDIR}/mcend LiH.static.inp-R > lih-nofc-R.txt
-# echo "closed-shell nofc time" $(($SECONDS - $START_TIME))"s"
-# ${pycmd} check_energy_conserved.py expec.t
-# 
-# echo "***TEST: LiH static test no frozen core"
-# START_TIME=$SECONDS
-# ${BINDIR}/mcend LiH.static.inp > lih-nofc.txt
-# echo "closed-shell nofc time" $(($SECONDS - $START_TIME))"s"
-# mv expec.t expec.t-lih-cs-nofc
-# echo "Comparing with the reference values"
-# ${pycmd} compare_expec_v2.py expec.t-lih-cs-nofc expec.t-lih-cs-ref
-# 
-# START_TIME=$SECONDS
-# echo "***TEST: LiH acf test no frozen core"
-# ${BINDIR}/mcend LiH.acf.inp > lih-nofc.txt
-# echo "closed-shell nofc time" $(($SECONDS - $START_TIME))"s"
-# mv expec.t expec.t-lih-cs-acf-nofc
-# echo "Comparing with the reference values"
-# ${pycmd} compare_expec_v2.py expec.t-lih-cs-acf-nofc expec.t-lih-cs-acf-ref
-# 
-# echo "LiH static test closed shell frozen core"
-# START_TIME=$SECONDS
-# ${BINDIR}/mcend LiH.static.inp-cs > lih-cs.txt
-# echo "closed-shell time" $(($SECONDS - $START_TIME))"s"
-# mv expec.t expec.t-lih-cs
-# echo "Comparing with the reference values"
-# ${pycmd} compare_expec_v2.py expec.t-lih-cs expec.t-lih-cs-fc-ref
-# 
-# START_TIME=$SECONDS
-# echo "LiH acf test closed shell frozen core"
-# ${BINDIR}/mcend LiH.acf.inp-cs > lih-acf-cs.txt
-# echo "acf time" $(($SECONDS - $START_TIME))"s"
-# mv expec.t expec.t-lih-acf-cs
-# echo "Comparing with the reference values"
-# ${pycmd} compare_expec_v2.py expec.t-lih-acf-cs expec.t-lih-acf-cs-fc-ref
-# 
-# START_TIME=$SECONDS
-# echo "LiH static test open shell"
-# ${BINDIR}/mcend LiH.static.inp-os > lih-os.txt
-# echo "open-shell time" $(($SECONDS - $START_TIME))"s"
-# mv expec_spinorbital.t expec_spinorbital.t-lih-os
-# echo "Comparing with the closed-shell values"
-# ${pycmd} compare_expec_v2.py expec.t-lih-cs expec_spinorbital.t-lih-os
-# 
-# START_TIME=$SECONDS
-# echo "LiH acf test open shell"
-# ${BINDIR}/mcend LiH.acf.inp-os > lih-acf-os.txt
-# mv expec_spinorbital.t expec_spinorbital.t-lih-acf-os
-# echo "open-shell time" $(($SECONDS - $START_TIME))"s"
-# ${pycmd} compare_expec_v2.py expec.t-lih-acf-cs expec_spinorbital.t-lih-acf-os
-# 
+echo "***TEST: LiH static test no frozen core real time propagation to check energy conservation"
+START_TIME=$SECONDS
+${BINDIR}/mcend LiH.static.inp-R > lih-nofc-R.txt
+echo "closed-shell nofc time" $(($SECONDS - $START_TIME))"s"
+${pycmd} check_energy_conserved.py expec.t
+
+echo "***TEST: LiH static test no frozen core"
+START_TIME=$SECONDS
+${BINDIR}/mcend LiH.static.inp > lih-nofc.txt
+echo "closed-shell nofc time" $(($SECONDS - $START_TIME))"s"
+mv expec.t expec.t-lih-cs-nofc
+echo "Comparing with the reference values"
+${pycmd} compare_expec_v2.py expec.t-lih-cs-nofc expec.t-lih-cs-ref
+
+START_TIME=$SECONDS
+echo "***TEST: LiH acf test no frozen core"
+${BINDIR}/mcend LiH.acf.inp > lih-nofc.txt
+echo "closed-shell nofc time" $(($SECONDS - $START_TIME))"s"
+mv expec.t expec.t-lih-cs-acf-nofc
+echo "Comparing with the reference values"
+${pycmd} compare_expec_v2.py expec.t-lih-cs-acf-nofc expec.t-lih-cs-acf-ref
+
+echo "LiH static test closed shell frozen core"
+START_TIME=$SECONDS
+${BINDIR}/mcend LiH.static.inp-cs > lih-cs.txt
+echo "closed-shell time" $(($SECONDS - $START_TIME))"s"
+mv expec.t expec.t-lih-cs
+echo "Comparing with the reference values"
+${pycmd} compare_expec_v2.py expec.t-lih-cs expec.t-lih-cs-fc-ref
+
+START_TIME=$SECONDS
+echo "LiH acf test closed shell frozen core"
+${BINDIR}/mcend LiH.acf.inp-cs > lih-acf-cs.txt
+echo "acf time" $(($SECONDS - $START_TIME))"s"
+mv expec.t expec.t-lih-acf-cs
+echo "Comparing with the reference values"
+${pycmd} compare_expec_v2.py expec.t-lih-acf-cs expec.t-lih-acf-cs-fc-ref
+
+START_TIME=$SECONDS
+echo "LiH static test open shell"
+${BINDIR}/mcend LiH.static.inp-os > lih-os.txt
+echo "open-shell time" $(($SECONDS - $START_TIME))"s"
+mv expec_spinorbital.t expec_spinorbital.t-lih-os
+echo "Comparing with the closed-shell values"
+${pycmd} compare_expec_v2.py expec.t-lih-cs expec_spinorbital.t-lih-os
+
+START_TIME=$SECONDS
+echo "LiH acf test open shell"
+${BINDIR}/mcend LiH.acf.inp-os > lih-acf-os.txt
+mv expec_spinorbital.t expec_spinorbital.t-lih-acf-os
+echo "open-shell time" $(($SECONDS - $START_TIME))"s"
+${pycmd} compare_expec_v2.py expec.t-lih-acf-cs expec_spinorbital.t-lih-acf-os
+
 START_TIME=$SECONDS
 echo "LiH+ static test"
 ${BINDIR}/mcend LiH.static.inp-p > lih-p.txt
