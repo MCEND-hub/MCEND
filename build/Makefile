@@ -1,10 +1,9 @@
 FC = ifx
 FC_classic = ifort
-FFLAGS = -O3
-LINK_FLAGS = -qopenmp -L${MKLROOT}/lib/intel64 -traceback -Wl,--start-group -lfftw3 -liomp5 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+FFLAGS = -O3 -fopenmp -c -fast -traceback -pg -integer-size 64 -real-size 64 -extend-source -fpe:0 -fpconstant
+LINK_FLAGS = -qopenmp -L${MKLROOT}/lib/intel64 -traceback -Wl,--start-group -lfftw3 -liomp5 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -Wl,--no-relax
 FFLAGS_classic = -fopenmp -c -fast -traceback -pg -i8 -r8 -extend-source -fpe0 -fpconstant
 LINK_FLAGS_classic = -qopenmp -L${MKLROOT}/lib/intel64 -traceback -Wl,--start-group -lfftw3 -liomp5 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
-
 
 BINDIR=../bin
 SRCDIR=../src
@@ -15,7 +14,7 @@ all: $(BINDIR)/mcend
 $(BINDIR)/mcend: $(OBJ)
 	$(FC) -o $(BINDIR)/mcend $(OBJ) $(LINK_FLAGS)
 
-debug: FFLAGS += -O0 -i8 -warn all -check all -traceback -fp-stack-check -g
+debug: FFLAGS = -O0 -i8 -warn all -check all -traceback -fp-stack-check -g -fpe:1 -fopenmp -c -fast -traceback -pg -integer-size 64 -real-size 64 -extend-source -fpconstant
 debug: $(BINDIR)/mcend
 
 classic: FC = $(FC_classic)
