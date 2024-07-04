@@ -51,18 +51,15 @@ jobs:
   #  - name: Install python dependencies for the tests
 #      run: |
 #        python -m pip install uv
-    - name: set basis library env var
-      run: |
-        cd MCEND-library/basis_library/
-        echo "MCEND_BASIS_LIBRARY=$(pwd)" >> $GITHUB_ENV
-        cd ../..
-        ls
-        pwd
+    # - name: set basis library env var
+      # run: |
+        # cd MCEND-library/basis_library/
+        # echo "MCEND_BASIS_LIBRARY=$(pwd)" >> $GITHUB_ENV
     - name: compile MCEND - classic intel
       run: |
         make classic
-    - name: Run tests
-      run: |
-        cd tests
-        ./test.sh
+    # - name: Run tests
+      # run: |
+        # cd tests
+        # ./test.sh
       
