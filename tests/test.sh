@@ -26,6 +26,7 @@ echo "Comparing with the reference values"
 ${pycmd} compare_expec_v2.py expec.t-lih-cs-acf-nofc expec.t-lih-cs-acf-ref
 
 echo "LiH static test closed shell frozen core"
+# different with ifx
 START_TIME=$SECONDS
 ${BINDIR}/mcend LiH.static.inp-cs > lih-cs.txt
 echo "closed-shell time" $(($SECONDS - $START_TIME))"s"
@@ -81,6 +82,7 @@ ${pycmd} compare_expec_v2.py expec.t-h2-cs expec_spinorbital.t-h2-os
 
 echo "OH static test"
 START_TIME=$SECONDS
+# fails on CI for classic
 ${BINDIR}/mcend OH.static.inp > oh.txt
 echo "open-shell time" $(($SECONDS - $START_TIME))"s"
 mv expec_spinorbital.t expec_spinorbital.t-oh
