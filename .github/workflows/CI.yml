@@ -54,6 +54,9 @@ jobs:
       if: runner.os == 'macOS'
       run: |
         brew install fftw
+        brew --prefix fftw
+        export DYLD_LIBRARY_PATH=/opt/homebrew/Cellar/fftw/3.3.10_1/lib:$DYLD_LIBRARY_PATH
+        # echo "FFTWLIB=/opt/homebrew/Cellar/fftw/3.3.10_1/lib" >> $GITHUB_ENV
 #    - name: Install python dependencies for the tests
 #      run: |
 #        python -m pip install uv
