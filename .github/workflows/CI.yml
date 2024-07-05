@@ -51,7 +51,7 @@ jobs:
       run: |
         sudo apt-get install libfftw3-dev
     - name: install fftw3 mac
-      if: runner.os == 'macos-latest'
+      if: runner.os == 'macOS'
       run: |
         brew install fftw
 #    - name: Install python dependencies for the tests
