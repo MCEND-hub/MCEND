@@ -218,6 +218,7 @@ module inputvars
       ios2 = 0
 
       open(newunit=inputio, file=trim(filename), status='old', action='read', iostat=ios, iomsg=iom)
+      write(*,*) "Opened input file"
       if (ios /= 0) then
         write(*,*) 'Fatal error!!!', trim(iom)
         stop

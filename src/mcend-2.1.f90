@@ -62,7 +62,10 @@
    write(*,'("  Date: "20(" "),i4"."i2.2"."i2.2" at "i2.2":"i2.2":"i2.2)') values(1:3), values(5:7)
 
    ! read input file
+   write(*,*) "Reading input parameters from file: ", arg
    call read_file(arg)
+   write(*,*) "Input parameters read successfully"
+   write(*,*) "Using ", numthreads, " threads for parallelization."
    call omp_set_num_threads(numthreads)
   !uncomment the below line hwn using mkl=parallel
   !call mkl_set_num_threads(numthreads)

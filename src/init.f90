@@ -1278,7 +1278,7 @@
           jobz = "V"
           uplo = "U"
           lwork = 3*nrprimn
-
+          info = 0
           call dsyev(jobz,uplo,nrprimn,hnuc,nrprimn,wn,workn,lwork,info)
           phin(:,:) = c0
           do ix=1, nrprimn

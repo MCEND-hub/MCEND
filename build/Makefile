@@ -15,8 +15,8 @@ $(BINDIR)/mcend: $(OBJ)
 	$(FC) -o $(BINDIR)/mcend $(OBJ) $(LINK_FLAGS)
 
 # debug: FFLAGS = -O0 -warn all -check all -traceback -fp-stack-check -g -fpe:1 -fopenmp -c -traceback -pg -integer-size 64 -real-size 64 -extend-source -fpconstant
-debug: FFLAGS = -O0 -fopenmp -c -warn all -check all -traceback -pg -integer-size 64 -real-size 64 -extend-source -fpe:0 -fpconstant -fPIE
-debug: LINK_FLAGS += -check all -pie
+debug: FFLAGS = -O0 -fopenmp -c -warn all -traceback -pg -integer-size 64 -real-size 64 -extend-source -fpe:0 -fpconstant
+# debug: LINK_FLAGS += -check all
 debug: $(BINDIR)/mcend
 
 classic: FC = $(FC_classic)
