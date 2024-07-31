@@ -502,42 +502,41 @@ module propa
       end if
 
 
-      !>  take trace of rho squared -> tr[rho]^2
-      trrho2 = c0
-      do is=1, 2*nrorb
-        do js=1, 2*nrorb
-          trrho2 = trrho2 + rho(is,js)*rho(js,is)
-        enddo
-      enddo
 
-      trrho2_spinorbital = c0
-      do is=1, nrorb_spinorbital
-        do js=1, nrorb_spinorbital
-          trrho2_spinorbital = trrho2_spinorbital + rho_spinorbital(is,js)*rho_spinorbital(js,is)
-        enddo
-      enddo
 
 
       !> ok yeah, so this does the \Tr \rho**2
       if (flag_spinorbital == 0) then
+      !>  take trace of rho squared -> tr[rho]^2
+        trrho2 = c0
+        do is=1, 2*nrorb
+          do js=1, 2*nrorb
+            trrho2 = trrho2 + rho(is,js)*rho(js,is)
+          enddo
+        enddo
+  
         write(trrho2f,'(1(f8.3,1x),2(F15.10,2x))') 0.0, dreal(trrho2), dimag(trrho2)
         call flush(trrho2f)
-      end if
 
-      if (flag_spinorbital == 1) then
-        write(trrho2f_spinorbital,'(1(f8.3,1x),2(F15.10,2x))') 0.0, dreal(trrho2_spinorbital), dimag(trrho2_spinorbital)
-        call flush(trrho2f_spinorbital)
-      end if
-
-      if (flag_spinorbital == 0) then
         write(35,'('//trim(npf)//'(F15.10,1x))') tend*au2fs, (nel*np(i),i=1,2*nrorb)
         call flush(35)
       end if
 
       if (flag_spinorbital == 1) then
+        trrho2_spinorbital = c0
+        do is=1, nrorb_spinorbital
+          do js=1, nrorb_spinorbital
+            trrho2_spinorbital = trrho2_spinorbital + rho_spinorbital(is,js)*rho_spinorbital(js,is)
+          enddo
+        enddo
+
+        write(trrho2f_spinorbital,'(1(f8.3,1x),2(F15.10,2x))') 0.0, dreal(trrho2_spinorbital), dimag(trrho2_spinorbital)
+        call flush(trrho2f_spinorbital)
+
         write(350,'('//trim(npf)//'(F15.10,1x))') tend*au2fs, (nel*np_spinorbital(i),i=1,nrorb_spinorbital)
-        call flush(350)
+        call flush(350)        
       end if
+
 
       tfin = tfin0/au2fs
       tout = tout0/au2fs
@@ -825,15 +824,15 @@ module propa
         endif
 
 
-        trrho2 = c0
-        do is=1, 2*nrorb
-          do js=1, 2*nrorb
-            trrho2 = trrho2 + rho(is,js)*rho(js,is)
-          enddo
-        enddo
-
 
         if (flag_spinorbital == 0) then
+          trrho2 = c0
+          do is=1, 2*nrorb
+            do js=1, 2*nrorb
+              trrho2 = trrho2 + rho(is,js)*rho(js,is)
+            enddo
+          enddo
+
           write(trrho2f,'(1(f8.3,1x),2(F15.10,2x))') tend*au2fs, dreal(trrho2), dimag(trrho2)
           call flush(trrho2f)
           
@@ -2077,7 +2076,7 @@ module propa
       integer :: nthr, nstart, nend
 
       save dens_input
-
+      !$omp threadprivate(dens_input)
       wtime_1 = omp_get_wtime()
       alpha = 1.0_dp
       beta  = 1.0_dp
@@ -2128,12 +2127,14 @@ module propa
       !$omp parallel
       !$omp workshare
       hel_input(:,:,1:5+nrensp) = c0
-      !$omp end workshare
-      !$omp workshare
       venmatmo_input(:,:,:) = c0
       !$omp end workshare
+
+
+
       if (flag_spinorbital == 0) then
-      !$omp do private(i,j,nu,mu,ix,iensp) schedule(dynamic) reduction(+:hel_input,venmatmo_input)
+
+      !$omp do private(i,j,nu,mu,ix,iensp) schedule(dynamic) !! reduction(+:hel_input,venmatmo_input)
         do i=1, nrorb_input
           do j=i, nrorb_input
             do nu=1, nrprime
@@ -2154,10 +2155,11 @@ module propa
           enddo
         enddo
       !$omp end do
+        
       end if
 
       if (flag_spinorbital == 1) then
-      !$omp do private(i,j,nu,mu,ix,iensp) schedule(dynamic) reduction(+:hel_input,venmatmo_input)
+       !$omp do private(i,j,nu,mu,ix,iensp) schedule(dynamic) !!reduction(+:hel_input,venmatmo_input)
         do i=1, nrorb_input
           do j=i, nrorb_input
             if ( mod( i-j, 2) /= 0 ) then
@@ -2192,6 +2194,7 @@ module propa
         enddo
       enddo
       !$omp end do
+      !$omp end parallel
 
       if (print_level == 1) then
         wtime_2 =  omp_get_wtime() - wtime_1
@@ -2199,6 +2202,8 @@ module propa
         wtime_1 = omp_get_wtime()
       end if
 
+
+      !$omp parallel
       !$omp do schedule(dynamic) private(i,j,k)
       do k=1, nrprimn
         do i=2, nrorb_input
@@ -2208,14 +2213,15 @@ module propa
         enddo
       enddo
       !$omp end do
+      
 
       !$omp workshare
       hel2a_input(:,:,:,:)   = c0
       !$omp end workshare
       !$omp end parallel
-      wtime_1 = omp_get_wtime()
 
-    !$omp parallel private(nthr, nstart, nend)
+      wtime_1 = omp_get_wtime()
+      !$omp parallel private(nthr, nstart, nend)
       nthr = omp_get_thread_num()
       nstart = nthr * nrprime / omp_get_num_threads()
       nend = (nthr + 1) * nrprime / omp_get_num_threads()
@@ -2225,7 +2231,8 @@ module propa
         call DGEMM( 'N', 'N', nrprime*nrprime*(nend - nstart), nrorb_input, nrprime, alpha, veeao(1 , 1, 1+ nstart, 1 ), &
       & Size(veeao, Dim = 1)**3, &
       & im_phi_input, Size( im_phi_input, Dim = 1 ), beta_dgemm, im_hel2a_2(1 , 1, 1+ nstart, 1), Size(im_hel2a_2, Dim = 1)**3 )
-  !$omp end parallel
+     !$omp end parallel
+      
       hel2a_input = dcmplx(re_hel2a_2, im_hel2a_2)
       if (print_level == 1) then
         wtime_2 =  omp_get_wtime() - wtime_1
@@ -2235,7 +2242,7 @@ module propa
 
      !$omp parallel
       if (flag_spinorbital == 0) then
-     !$omp do private(l, j, si, nu, mu) schedule(dynamic)
+       !$omp do private(l, j, si, nu, mu) schedule(dynamic)
         do l=1, nrorb_input
           do si=1, nrprime
             do j=1, l
@@ -2345,15 +2352,21 @@ module propa
           enddo
         enddo
       !$omp end do
-
       end if
+     !$omp end parallel
 
+
+      
       if (print_level == 1) then
         wtime_2 =  omp_get_wtime() - wtime_1
         write (*,*) 'time for hel3 step3', wtime_2
         wtime_1 = omp_get_wtime()
       end if
 
+
+
+
+      !$omp parallel
       !$omp do private(l, k, j, mu, si)
       do l=1,nrorb_input
         do k=1,nrorb_input
@@ -2369,6 +2382,8 @@ module propa
         enddo
       enddo
       !$omp end do
+      !$omp end parallel
+     
 
       if (print_level == 1) then
         wtime_2 =  omp_get_wtime() - wtime_1
@@ -2376,6 +2391,8 @@ module propa
         wtime_1 = omp_get_wtime()
       end if
 
+
+      !$omp parallel     
       if (flag_spinorbital == 0) then
       !$omp do private(l,k,j,i,mu)
         do l=1, nrorb_input
@@ -2414,13 +2431,13 @@ module propa
         enddo
       !$omp end do
       end if
+      !$omp end parallel
 
       if (print_level==1) then
         wtime_2 =  omp_get_wtime() - wtime_1
         write (*,*) 'time for hel2 step5', wtime_2
         wtime_1 = omp_get_wtime()
       end if
-      !$omp end parallel
 
       deallocate(hel2a_input)
 
@@ -2800,14 +2817,15 @@ module propa
       & rho_input(nrorb_spinorbital_input, nrorb_spinorbital_input), &
       & mf1_t_tmp_input(nrorb_input, nrorb_input, nrprime, nrprime)
       complex(dp), allocatable :: mf1_input(:,:,:,:), mf1_2e_tmp_input(:,:,:,:)
-      save vorz, ind1, ind2, jr, lr
+      save vorz, ind1, ind2, jr, lr, mr2, pr2, mr3, pr3
 
-      !$omp threadprivate(vorz, ind1, ind2, jr, lr)
+      !$omp threadprivate(vorz, ind1, ind2, jr, lr, mr2, pr2, mr3, pr3)
       wtime_1 = omp_get_wtime()
       if ( .not. allocated(mf1_input) )    allocate( mf1_input(nrorb_input, nrorb_input, nrprime, nrprime) )
       if ( .not. allocated(mf1_2e_tmp_input) )    allocate( mf1_2e_tmp_input(nrorb_input, nrorb_input, nrprime, nrprime) )
       wtime_1 = omp_get_wtime()
       !$omp parallel
+
       !$omp workshare
       mf1_input = c0
       mf1_2e_tmp_input = c0
@@ -2816,20 +2834,18 @@ module propa
       venmat_enmo   = c0
       density_enmo  = c0
       !$omp end workshare
+      !$omp end parallel
 
       if (print_level == 1) then
         write (*,*) 'wtime init', omp_get_wtime() - wtime_1
         wtime_1 = omp_get_wtime()
       end if
 
-      !> mean field due to V_ee
-      !> Strange: this used to work but now causes sigsev errors
-  !    !$omp do private(i, mu, la, ie) reduction(+:mf1buff,mf1)
-      !> removing mf1buff from the reduction seems to make it work again, but
-      !> the calculation has a bit of inconsistency at the 1e-6 decimal place now
+
       wtime_1 = omp_get_wtime()
+      !$omp parallel
    if (flag_spinorbital == 0) then
-    !$omp do private(jr0, lr0, mu, la, mr0, pr0) schedule(dynamic) reduction(+: mf1_2e_tmp_input)
+    !$omp do private(jr0, lr0, mu, la, mr0, pr0) schedule(dynamic) reduction(+: temp_rdm)
      do la = 1, nrprime
        do mu = 1, la
          do lr0 = 1, nrorb
@@ -2899,6 +2915,7 @@ module propa
       enddo
     enddo
     !$omp end do
+
     end if
 
     if (flag_spinorbital == 1) then
@@ -2906,7 +2923,7 @@ module propa
   ! <t> simple product 4 loops: 2 nrprime 2 nrorb_input, can be migrated to dphiedt-> 3 loops
   ! <ven>  6 loops, 2 nrprime, 2 nrorb_input, 2 nrspf <- ==1 in most cases -> can be migrated to dphiedt-> 3 loops
   ! maybe dgemm will help, but the current contraction is not adject index
-    !$omp do private(jr0, lr0, mu, la, mr0, pr0) schedule(dynamic) reduction(+: mf1_2e_tmp_input)
+    !$omp do private(jr0, lr0, mu, la, mr0, pr0) schedule(dynamic) !!reduction(+: mf1_2e_tmp_input)
       do la = 1, nrprime
         do mu = 1, la
           do lr0 = 1, nrorb_spinorbital
@@ -2982,8 +2999,8 @@ module propa
         enddo
       enddo
       !$omp end do
-
     end if
+    !$omp end parallel
 
     if (print_level == 1) then
       wtime_2 =  omp_get_wtime() - wtime_1
@@ -2991,10 +3008,12 @@ module propa
       wtime_1 = omp_get_wtime()
     end if
 
+
+    !$omp parallel
     ! mean field due to V_en + T
     if (flag_spinorbital == 0) then
       if (.not. mf_reduction) then
-      !$omp do private(jr0, lr0, mu, nu) schedule(dynamic) reduction(+: mf1_input)
+      !$omp do private(jr0, lr0, mu, nu) schedule(dynamic) !!reduction(+: mf1_input)
         do nu=1,nrprime
           do mu=1,nrprime
             do lr0=1,nrorb_input
@@ -3005,17 +3024,12 @@ module propa
           enddo
         enddo
       !$omp end do
-
-        if (print_level == 1) then
-          write (*,*) 'wtime t step-1', omp_get_wtime() - wtime_1
-          wtime_1 = omp_get_wtime()
-        end if
       end if
     end if
 
     if (flag_spinorbital == 1) then
       if (.not. mf_reduction ) then
-          !$omp do private(jr0, lr0, mu, nu) schedule(dynamic) reduction(+: mf1_input)
+        !$omp do private(jr0, lr0, mu, nu) schedule(dynamic) reduction(+: mf1_input)
         do jr0=1,nrorb_input
           do lr0=1,nrorb_input
             do mu=1,nrprime
@@ -3025,17 +3039,21 @@ module propa
             enddo
           enddo
         enddo
-          !$omp end do
-        if (print_level == 1) then
-          wtime_2 =  omp_get_wtime() - wtime_1
-          write(*,*) 'wtime t step-1', wtime_2
-          wtime_1 = omp_get_wtime()
-        end if
+        !$omp end do
       end if
     end if
+    !$omp end parallel
+
+
+    if (print_level == 1) then
+      write (*,*) 'wtime t step-1', omp_get_wtime() - wtime_1
+      wtime_1 = omp_get_wtime()
+    end if
+
 
       if (flag_spinorbital==0) then
-      !$omp do private(jn, ln, mu, nu, alpha) schedule(dynamic) reduction(+:venmat_enmo)
+      !$omp parallel
+      !$omp do private(jn, ln, mu, nu, alpha) schedule(dynamic) !!reduction(+:venmat_enmo)
       do nu=1, nrprime
         do mu=1, nrprime
           do ln=1, nrspf
@@ -3049,14 +3067,15 @@ module propa
         end do
       end do
       !$omp end do
+    !$omp end parallel
 
       if (print_level == 1) then
         write (*,*) 'wtime ven step-1', omp_get_wtime() - wtime_1
       end if
-
       wtime_1 = omp_get_wtime()
 
-      !$omp do private(jshf,lall, jn, ln, mu, nu, alpha) schedule(dynamic) reduction(+:density_enmo)
+      !$omp parallel
+      !$omp do private(jshf, iall, lall, jn, ln) schedule(dynamic) reduction(+:density_enmo)
       do jshf=1, nrshf
         do iall=1, allow1_input(jshf,0)
           jr = (allow1_input(jshf,3*(iall-1)+1) - 1)/2 + 1
@@ -3081,14 +3100,16 @@ module propa
         end do
       end do
       !$omp end do
+      !$omp end parallel
 
       if (print_level == 1) then
         write (*,*) 'wtime ven step-2', omp_get_wtime() - wtime_1
       end if
-
       wtime_1 = omp_get_wtime()
 
-      !$omp do private(i, j, mu, nu, jn, ln) schedule(dynamic) reduction(+:mf1_tmp_input)
+
+      !$omp parallel
+      !$omp do private(i, j, mu, nu, jn, ln) schedule(dynamic) !!reduction(+:mf1_tmp_input)
       do nu=1, nrprime
         do mu=1, nrprime
           do j=1, nrorb_input
@@ -3103,14 +3124,15 @@ module propa
           enddo
         enddo
       !$omp end do
-      !!$omp end parallel
+      !$omp end parallel
 
       if (print_level == 1) then
         write (*,*) 'wtime ven step-3', omp_get_wtime() - wtime_1
       end if
       wtime_1 = omp_get_wtime()
-      !!$omp parallel
-      !$omp do private(i, j, mu, nu)  schedule(dynamic) reduction(+:mf1_input)
+
+      !$omp parallel
+      !$omp do private(i, j, mu, nu)  schedule(dynamic) !!reduction(+:mf1_input)
       do nu=1, nrprime
         do mu=1, nrprime
           do j=1, nrorb_input
@@ -3120,8 +3142,9 @@ module propa
             enddo
           enddo
         enddo
-
       !$omp end do
+      !$omp end parallel
+
        if (print_level == 1) then
          write (*,*) 'wtime ven step-4', omp_get_wtime() - wtime_1
        end if
@@ -3130,7 +3153,8 @@ module propa
 
       !!! open-shell new section !!!
       if (flag_spinorbital == 1) then
-      !$omp do private(jn, ln, mu, nu, alpha) schedule(dynamic) reduction(+:venmat_enmo)
+      !$omp parallel
+      !$omp do private(jn, ln, mu, nu, alpha) schedule(dynamic) !!reduction(+:venmat_enmo)
       do nu=1, nrprime
         do mu=1, nrprime
           do ln=1, nrspf
@@ -3144,6 +3168,7 @@ module propa
         end do
       end do
       !$omp end do
+      !$omp end parallel
 
       if (print_level == 1) then
         write (*,*) 'wtime ven_spinorbital step-1', omp_get_wtime() - wtime_1
@@ -3151,7 +3176,8 @@ module propa
 
       wtime_1 = omp_get_wtime()
 
-      !$omp do private(jshf,lall, jn, ln, mu, nu, alpha) schedule(dynamic) reduction(+:density_enmo)
+      !$omp parallel
+      !$omp do private(jshf, iall, lall, jn, ln) schedule(dynamic) reduction(+:density_enmo)
       do jshf=1, nrshf
         do iall=1, allow1_input(jshf,0)
           jr = allow1_input(jshf,3*(iall-1) + 1 )
@@ -3173,13 +3199,15 @@ module propa
         end do
       end do
       !$omp end do
+      !$omp end parallel
 
       if (print_level == 1) then
         write (*,*) 'wtime ven_spinorbital step-2', omp_get_wtime() - wtime_1
       end if
       wtime_1 = omp_get_wtime()
 
-      !$omp do private(i, j, mu, nu, jn, ln) schedule(dynamic) reduction(+:mf1_tmp_input)
+      !$omp parallel
+      !$omp do private(i, j, mu, nu, jn, ln) schedule(dynamic) !!reduction(+:mf1_tmp_input)
       do nu=1, nrprime
         do mu=1, nrprime
           do j=1, nrorb_input
@@ -3195,13 +3223,15 @@ module propa
           enddo
         enddo
       !$omp end do
-      !!$omp end parallel
+      !$omp end parallel
+
+
       if (print_level == 1) then
         write (*,*) 'wtime ven_spinorbital step-3', omp_get_wtime() - wtime_1
       end if
       wtime_1 = omp_get_wtime()
-      !!$omp parallel
-      !$omp do private(i, j, mu, nu)  schedule(dynamic) reduction(+:mf1_input)
+      !$omp parallel
+      !$omp do private(i, j, mu, nu)  schedule(dynamic) !!reduction(+:mf1_input)
          do nu=1, nrprime
            do mu=1, nrprime
              do j=1, nrorb_input
@@ -3212,6 +3242,7 @@ module propa
            enddo
          enddo
       !$omp end do
+      !$omp end parallel
 
          if (print_level == 1) then
            write (*,*) 'wtime ven_spinorbital step-4', omp_get_wtime() - wtime_1
@@ -3219,7 +3250,6 @@ module propa
          wtime_1 = omp_get_wtime()
 
        end if
-      !$omp end parallel
 
       deallocate(mf1_2e_tmp_input)
 
@@ -3526,3 +3556,4 @@ module propa
   !> @file
   !> @brief contains the main propagation
   !! and evaluation of Hamiltonian elements/mean fields.
+
