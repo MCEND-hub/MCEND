@@ -200,7 +200,7 @@
       jobvr = "N"
       jobvl = "N"
       lwork = 2*nel
-
+      info = 0
       do ir=1, nrorb_input
         do jr=1, nrorb_input
           bigovl_input(ir,jr) = c0

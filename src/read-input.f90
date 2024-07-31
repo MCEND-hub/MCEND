@@ -78,7 +78,8 @@
 !! @param initguessf initial guess file
 !! @param scfv_path path to the hmat file with values generated from orthog routine
 !! @param n2int_path path to the two electron integrals
-!! @param mcend_top path to the mcend code top
+!! @param mcend_top path to the current execution directory
+!! @param integral_library_env variable that points to the path of the integral library
 !! @param logwavef print wave function every tout?
 !! @param logev diagonalize the CI matrix to get energy eigenstates
 !! @param imagt imaginary time propagation (imagt=(1,0) => normal propagation) (imagt=(0,-1) => relaxation)
@@ -167,6 +168,7 @@ module inputvars
       character(300) :: scfv_path
       character(300) :: n2int_path
       character(300) :: mcend_top
+      character(300) :: integral_library_env
       character(300) :: path2ints
       logical :: logwavef
       logical :: logev
@@ -203,19 +205,20 @@ module inputvars
       character(255) :: line_temp
       character(100), allocatable :: charvars(:)
       character(100), allocatable :: linevars(:)
-      character(6), allocatable :: lineoutvars(:)
       character(50), allocatable :: keywargs(:)
       character(50), allocatable :: keywargs2(:)
       real(dp), allocatable :: inpvars(:)
-      integer :: in, natom
+      integer :: natom
 
       call get_environment_variable("PWD", mcend_top)
+      call get_environment_variable("MCEND_BASIS_LIBRARY", integral_library_env)
 
       ! get the number of lines in a file w/o using a external bash call
       ios = 0
       ios2 = 0
 
       open(newunit=inputio, file=trim(filename), status='old', action='read', iostat=ios, iomsg=iom)
+      write(*,*) "Opened input file"
       if (ios /= 0) then
         write(*,*) 'Fatal error!!!', trim(iom)
         stop
@@ -501,13 +504,20 @@ module inputvars
 
 
       !> get current working directory
-
-
-      if ( index(intdir, '.') == 0 .or. index(intdir, '/') == 0 ) then
-          intdir = 'basis_library/'//trim(intdir)
+      if ( intdir(1:1)  == '.' .or.  intdir(1:1) == '/' ) then  
+        intdir = trim(intdir)
+        write(*,*) "Relative or absolute path to integral library detected", intdir
+      else if ( len(trim(integral_library_env)) >= 1 ) then
+        write(*,*) "Environment variable for integral library detected", integral_library_env
+        intdir = trim(integral_library_env)//'/'//trim(intdir)
       else
-          intdir = trim(intdir)   
+        intdir = 'basis_library/'//trim(intdir)
+        write(*,*) "Using MCEND legacy basis_library folder that needs to be &
+         & present in the current directory", intdir
       endif
+
+
+
 
       scfv_path = trim(intdir)//'/scf-guess-'//trim(cmpdname)//'.dat'
       n2int_path = trim(intdir)//'/info-'//trim(cmpdname)//'.dat'
@@ -711,8 +721,8 @@ module inputvars
       nrdhf_spinorbital  = max_nrindep_2_spinorbital
 
       write(*,'((a40,1x),(a7))') 'Compound: ', trim(cmpdname)
-      write(*,'((a40,1x),(a60))') 'Integral Folder: ', trim(intdir)
-      write(*,'((a40,1x),(a60))') 'Initial Hmat values read from: ', trim(scfv_path)
+      write(*,'((a40,1x),(a))') 'Integral Folder: ', trim(intdir)
+      write(*,'((a40,1x),(a))') 'Initial Hmat values read from: ', trim(scfv_path)
       write(*,'((a40,1x),(i7))') 'No. electronic bfn: ', nrprime
       write(*,'((a40,1x),(i7))') 'No. electrons: ', nel
       write(*,'((a40,1x),(i7))') 'No. molecular orbitals: ', 2*nrorb

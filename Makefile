@@ -1,11 +1,14 @@
 all:
 	$(MAKE) -C build all
 
+debug:
+	$(MAKE) -C build debug   
+
 classic:
 	$(MAKE) -C build classic
 
-debug:
-	$(MAKE) -C build debug   
+debug_classic:
+	$(MAKE) -C build debug_classic
 
 gfortran:
 	$(MAKE) -C build gfort

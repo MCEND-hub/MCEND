@@ -299,14 +299,12 @@
 
       end subroutine
 
-!> This s=ubroutine initializes the wave functions, and constructs the hash-tables
+!> This subroutine initializes the wave functions, and constructs the hash-tables
 !! for the evaluation of Slater-Condon rules.
       subroutine initstuff()
 
       implicit none
-        real(dp) ::  blub
         real(dp) ::  dk
-        integer :: cjs, cls, je
         integer :: iarr(nel)
         integer :: iarr_spinorbital(nel), iarr3_spinorbital(nel)
         integer :: iarr_shdl(nel-1)
@@ -322,10 +320,9 @@
         integer :: nexcit_spinorbital
         integer :: nexcit2
         integer :: nexcit2_spinorbital
-        integer :: vorz, ind, lr, ie, ie2
+        integer :: vorz, ind, lr, ie
         integer :: vorz2, ind2, cis, js ! bookkeeping vectors
         integer ::  cid
-        integer :: larr(nel,nel,nel), jarr(nel), indflag(nel,nel)
         integer :: iarr3(nel)
         integer :: ms, ns, ps, qs
         integer :: nrdiff, jr, ds
@@ -337,7 +334,6 @@
         integer :: allowlist_spinorbital(nrorb_spinorbital-(nel-1))
         integer :: hmfcounter, hmfcounter2
         integer :: hmfcounter_spinorbital, hmfcounter2_spinorbital
-        integer :: fhmf_spinorbital1,fhmf_spinorbital2
         integer :: flag_frzorb
         character(len=10) :: ncol
         character(len=1)  :: ncol2
@@ -1104,24 +1100,26 @@
         real(dp)     :: rep(nrorb), imp(nrorb), rea, ima
         real(dp)     :: rep_spinorbital(nrorb_spinorbital),imp_spinorbital(nrorb_spinorbital), rea_spinorbital, ima_spinorbital
         integer(i64) :: planf, planb
-        integer      :: mu, nu, in, ix, jx
+        integer      :: mu, in, ix, jx
         integer      :: i, j
         integer      :: scfvals
         integer      :: fftw_forward=-1,fftw_backward=1
         integer      :: info, lwork
         integer      :: spsi
-        integer      :: init_coef_A, sum_sz_tmp, detl_spinorbital_count, nel_count, flag_print
+        integer      :: init_coef_A, sum_sz_tmp, detl_spinorbital_count, nel_count
         character(3) :: jobz, uplo, ncol
         character(3) :: nnn
 
         if (restart == 2 .or. restart == 5) then
           nnn = stri(2*nrorb)
           if (flag_spinorbital==0) then
+          write(*,*) "Restart requested - reading from finalpsi"
             open(newunit=spsi,file="finalpsi")
             do i=1, nrindep*nrspf
               read(spsi,*) rea, ima
               A(i) = dcmplx(rea,ima)
             end do
+
 
             do mu=1, nrprime
               read(spsi,'('//stri(2*nrorb)//'(e23.16,1x))') (rep(in),in=1,nrorb), (imp(in),in=1,nrorb)
@@ -1141,6 +1139,7 @@
             close(spsi)
 
           else if (flag_spinorbital==1) then
+          write(*,*) "Restart requested - reading from finalpsi_spinorbital"
             open(newunit=spsi,file="finalpsi_spinorbital")
             do i=1, nrindep_spinorbital*nrspf
               read(spsi,*) rea_spinorbital, ima_spinorbital
@@ -1279,7 +1278,7 @@
           jobz = "V"
           uplo = "U"
           lwork = 3*nrprimn
-
+          info = 0
           call dsyev(jobz,uplo,nrprimn,hnuc,nrprimn,wn,workn,lwork,info)
           phin(:,:) = c0
           do ix=1, nrprimn
