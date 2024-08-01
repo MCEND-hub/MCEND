@@ -209,7 +209,7 @@ module propa
         open(newunit=efieldf,file="efield.t")
         open(newunit=fexpec,file="expec.t")
         open(newunit=fentro,file="entropy.t")
-        write(fexpec,'(A6,I3,A6,I3,A6,I3,A6,I3,A6,I3,1x,A50)')  "nel", nel, "nsz", nsz, "nrorb" , &
+        write(fexpec,'(A6,I3,A6,I3,A6,I3,A6,I3,A6,I3,1x,A120)')  "nel", nel, "nsz", nsz, "nrorb" , &
         & nrorb,"nrfrz" ,nrorb_fc, "nrspf", nrspf, intdir
         write(fexpec,formtt) "time","norm","x","y","z","R","Te","Tn","Vee","Vnn","Ven","Htot","Re(Acf)","Im(Acf)"
 
