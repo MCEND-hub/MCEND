@@ -34,7 +34,7 @@ All of these can also be used with options for debugging and no optimization (ot
 make classic_debug
 ```
 Alternatively, `make debug` (for `ifx`) and `make debug_gfortran` (for `gfortran`) are available.
-The source code compiles and runs on linux and MacOS, it has not been tested on Windows.
+The source code compiles and runs on Linux, MacOS, and Windows subsystem Linux.
 
 ## MCEND basis library
 
@@ -48,7 +48,7 @@ To provide the directory of the basis set files, you can also set a symlink that
 
 For the ease of use, set an `MCEND_BASIS_LIBRARY` environment variable to point to the MCEND basis set library. For example, in bash:
 ```
-export MCEND_BASIS_LIBRARY="/User/username/MCEND-libary/basis_library
+export MCEND_BASIS_LIBRARY=/User/username/MCEND-libary/basis_library
 ```
 where you need to adapt the path accordingly.
 
