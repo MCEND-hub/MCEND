@@ -23,7 +23,7 @@ jobs:
           - {compiler: intel-classic, version: '2021.10'}
         exclude:
           - os: macos-latest
-          - toolchain: {compiler: intel, version: '2023.2'}
+            toolchain: {compiler: intel, version: '2023.2'}
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4  
