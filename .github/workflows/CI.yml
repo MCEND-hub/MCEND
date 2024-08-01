@@ -15,13 +15,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest]
-        # os: [ubuntu-22.04,macos-latest]
+        # os: [macos-latest]
+        os: [ubuntu-22.04,macos-latest]
         # os: [ubuntu-22.04]
         python-version: [3.11]
         toolchain:
           # - {compiler: intel, version: '2023.2'}
           - {compiler: intel-classic, version: '2021.9'}
+          - {compiler: intel-classic, version: '2021.10'}
         # exclude:
           # - os: macos-latest
           # - toolchain: {compiler: intel, version: '2023.2'}
