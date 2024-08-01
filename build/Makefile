@@ -1,9 +1,30 @@
 FC = ifx
 FC_classic = ifort
-FFLAGS = -O3 -fopenmp -c -traceback -pg -integer-size 64 -real-size 64 -extend-source -fpe:0 -fpconstant 
-LINK_FLAGS = -L${MKLROOT}/lib/intel64 -traceback -lfftw3 -liomp5 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+MKLLIB := ${MKLLIB}
+# FFTWLIB := ${FFTWLIB}
+ifeq ($(MKLLIB),)
+  MKLLIB = ${MKLROOT}/lib/intel64
+  $(info    MKLLIB taken from MKLROOT $(MKLLIB))
+endif
+
+UNAME_S := $(shell uname -s)
+# Conditional flags for macOS
+ifeq ($(UNAME_S),Darwin)
+  # Add FFTW3 library path
+  FFTW_LIB_PATH := $(shell brew --prefix fftw)/lib
+  FFTWLIB += -L$(FFTW_LIB_PATH) -lfftw3
+  $(info    FFTWLIB set to $(FFTWLIB))
+endif
+
+ifeq ($(FFTWLIB),)
+  FFTWLIB = -lfftw3
+  $(info    FFTWLIB not set, using lfftw3)
+endif
+
+FFLAGS = -O3 -fopenmp -c -traceback -pg -integer-size 64 -real-size 64 -extend-source -fpe:0 -fpconstant
+LINK_FLAGS = -qopenmp -L${MKLLIB} -traceback ${FFTWLIB} -liomp5 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 FFLAGS_classic = -fopenmp -c -fast -traceback -pg -i8 -r8 -extend-source -fpe0 -fpconstant
-LINK_FLAGS_classic = -qopenmp -L${MKLROOT}/lib/intel64 -traceback -Wl,--start-group -lfftw3 -liomp5 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+LINK_FLAGS_classic = -qopenmp -L${MKLLIB} -traceback ${FFTWLIB} -liomp5 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 BINDIR=../bin
 SRCDIR=../src
@@ -29,16 +50,14 @@ debug_classic: LINK_FLAGS = $(LINK_FLAGS_classic)
 debug_classic: $(BINDIR)/mcend
 
 gfort: FC = gfortran
-gfort: FFLAGS = -O3 -c -pg -g
-#gfort: FFLAGS = -O1 -c -pg -g
-gfort: LINK_FLAGS = -llapack -lblas -lfftw3 -fopenmp -pg -g
+gfort: FFLAGS = -O3 -c -g
+gfort: LINK_FLAGS = -llapack -lblas ${FFTWLIB} -fopenmp -g
 gfort: $(BINDIR)/mcend
 
 debug_gfort: FC = gfortran
-debug_gfort: FFLAGS = -O0 -c
-debug_gfort: LINK_FLAGS = -llapack -lblas -lfftw3 -fopenmp
+debug_gfort: LINK_FLAGS = -llapack -lblas ${FFTWLIB} -fopenmp -g
 #debug_gfort: FFLAGS += -O0 -c -g -p -ffree-line-length-0 -fcheck=all -ffpe-trap=zero,overflow,underflow -finit-real=nan -Wline-truncation -Wall -fbacktrace -fbounds-check
-debug_gfort: FFLAGS += -O0 -c -g -p -ffree-line-length-0 -fcheck=all -Wline-truncation -Wall -fbacktrace -fbounds-check
+debug_gfort: FFLAGS = -O0 -c -g -ffree-line-length-0 -fcheck=all -Wline-truncation -Wall -fbacktrace -fbounds-check
 debug_gfort: $(BINDIR)/mcend
 
 clean:

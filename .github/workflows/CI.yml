@@ -15,15 +15,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # os: [ubuntu-22.04,macos-latest]
-        os: [ubuntu-22.04]
+        os: [ubuntu-22.04,macos-latest]
         python-version: [3.11]
         toolchain:
           - {compiler: intel, version: '2023.2'}
-          - {compiler: intel-classic, version: '2023.2'}
-        # exclude:
-          # - os: macos-latest
-          # - toolchain: {compiler: intel, version: '2023.2'}
+          - {compiler: intel-classic, version: '2021.9'}
+          - {compiler: intel-classic, version: '2021.10'}
+        exclude:
+          - os: macos-latest
+            toolchain: {compiler: intel, version: '2023.2'}
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4  
@@ -45,12 +45,20 @@ jobs:
         compiler: ${{ matrix.toolchain.compiler }}
         version: ${{ matrix.toolchain.version }}
         install_mkl: "true"
-    - name: install fftw3
+    - name: install fftw3 linux
+      if: runner.os == 'Linux'
       run: |
         sudo apt-get install libfftw3-dev
-    # - name: Install python dependencies for the tests
-      # run: |
-      #  python -m pip install uv
+    - name: install fftw3 mac
+      if: runner.os == 'macOS'
+      run: |
+        brew install fftw
+        brew --prefix fftw
+        export DYLD_LIBRARY_PATH=/opt/homebrew/Cellar/fftw/3.3.10_1/lib:$DYLD_LIBRARY_PATH
+        # echo "FFTWLIB=/opt/homebrew/Cellar/fftw/3.3.10_1/lib" >> $GITHUB_ENV
+#    - name: Install python dependencies for the tests
+#      run: |
+#        python -m pip install uv
     - name: set basis library env var
       run: |
         cd MCEND-library/basis_library/
