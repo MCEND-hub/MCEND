@@ -9,10 +9,19 @@ MCEND (multi-configuration electron-nuclear dynamics) is a quantum dynamics code
 ## Requirements
 MCEND requires Blas, Lapack and FFTW3 libraries; the tools require python3 and numpy, plus additional python libraries. The documentation requires doxygen. You will need a Fortran compiler to compile the source code. Intel Fortran is recommended as the resulting binary is computationally more efficient.
 
-On ubuntu, for an Intel Fortran version of 2023.2.0:
+On Ubuntu, for an Intel Fortran version of 2023.2.0:
 ```
 sudo apt-get install intel-oneapi-compiler-fortran-2023.2.0 intel-oneapi-mkl-2023.2.0 libfftw3-dev
 ```
+On MacOS, install the intel oneapi base and hpc kit. Also, you need the xcode command line tools. Install fftw3 using
+```
+brew install fftw3
+```
+To use gfortran, install it using
+```
+brew install gfortran
+```
+Compilation with `ifort` or `gfortran` is then possible using the `make classic` or `make gfortran` commands as described below.\
 
 ## Compilation
 To compile the source code, type
@@ -48,7 +57,7 @@ To provide the directory of the basis set files, you can also set a symlink that
 
 For the ease of use, set an `MCEND_BASIS_LIBRARY` environment variable to point to the MCEND basis set library. For example, in bash:
 ```
-export MCEND_BASIS_LIBRARY="/User/username/MCEND-libary/basis_library
+export MCEND_BASIS_LIBRARY=/User/username/MCEND-libary/basis_library
 ```
 where you need to adapt the path accordingly.
 

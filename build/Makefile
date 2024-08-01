@@ -21,8 +21,6 @@ ifeq ($(FFTWLIB),)
   $(info    FFTWLIB not set, using lfftw3)
 endif
 
- -L/opt/homebrew/opt/fftw/lib
-
 FFLAGS = -O3 -fopenmp -c -traceback -pg -integer-size 64 -real-size 64 -extend-source -fpe:0 -fpconstant
 LINK_FLAGS = -qopenmp -L${MKLLIB} -traceback ${FFTWLIB} -liomp5 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 FFLAGS_classic = -fopenmp -c -fast -traceback -pg -i8 -r8 -extend-source -fpe0 -fpconstant
