@@ -57,7 +57,7 @@ gfort: $(BINDIR)/mcend
 debug_gfort: FC = gfortran
 debug_gfort: LINK_FLAGS = -llapack -lblas ${FFTWLIB} -fopenmp -g
 #debug_gfort: FFLAGS += -O0 -c -g -p -ffree-line-length-0 -fcheck=all -ffpe-trap=zero,overflow,underflow -finit-real=nan -Wline-truncation -Wall -fbacktrace -fbounds-check
-debug_gfort: FFLAGS += -O0 -c -g -ffree-line-length-0 -fcheck=all -Wline-truncation -Wall -fbacktrace -fbounds-check
+debug_gfort: FFLAGS = -O0 -c -g -ffree-line-length-0 -fcheck=all -Wline-truncation -Wall -fbacktrace -fbounds-check
 debug_gfort: $(BINDIR)/mcend
 
 clean:
