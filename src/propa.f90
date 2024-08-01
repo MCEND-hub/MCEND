@@ -3029,7 +3029,7 @@ module propa
 
     if (flag_spinorbital == 1) then
       if (.not. mf_reduction ) then
-        !$omp do private(jr0, lr0, mu, nu) schedule(dynamic) reduction(+: mf1_input)
+        !$omp do private(jr0, lr0, mu, nu) schedule(dynamic) !! reduction(+: mf1_input)
         do jr0=1,nrorb_input
           do lr0=1,nrorb_input
             do mu=1,nrprime
