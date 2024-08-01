@@ -17,7 +17,7 @@ ifeq ($(UNAME_S),Darwin)
 endif
 
 ifeq ($(FFTWLIB),)
-  FFTWLIB = lfftw3
+  FFTWLIB = -lfftw3
   $(info    FFTWLIB not set, using lfftw3)
 endif
 
