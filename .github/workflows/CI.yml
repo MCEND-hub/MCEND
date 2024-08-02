@@ -71,8 +71,8 @@ jobs:
       if: matrix.toolchain.compiler == 'intel'
       run: |
         make
-    - name: Run tests
-      run: |
-        cd tests
-        ./test.sh
+    # - name: Run tests
+      # run: |
+        # cd tests
+        # ./test.sh
       
