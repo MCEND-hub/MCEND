@@ -28,7 +28,7 @@ LINK_FLAGS_classic = -qopenmp -L${MKLLIB} -traceback ${FFTWLIB} -liomp5 -lmkl_in
 
 BINDIR=../bin
 SRCDIR=../src
-OBJ = read-input.o generic_data.o akima_interpol.o utils.o combinations.o init.o analysis.o propa.o mcend-2.1.o
+OBJ = read-input.o generic_data.o akima_interpol.o utils.o combinations.o init.o analysis.o propa.o mcend.o
 
 all: $(BINDIR)/mcend
 

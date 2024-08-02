@@ -53,13 +53,11 @@ git submodule update --init --recursive
 ```
 in your terminal within the MCEND folder. You should then find all the basis set files inside `MCEND-library/basis_library/`.
 
-To provide the directory of the basis set files, you can also set a symlink that points to the folder.
-
-For the ease of use, set an `MCEND_BASIS_LIBRARY` environment variable to point to the MCEND basis set library. For example, in bash:
+To provide the directory of the basis set files, you can either set absolute or relative paths for the `intpath` input parameter in the input file. Or, for ease of use, set an `MCEND_BASIS_LIBRARY` environment variable to point to the MCEND basis set library. For example, in bash:
 ```
 export MCEND_BASIS_LIBRARY=/User/username/MCEND-libary/basis_library
 ```
-where you need to adapt the path accordingly.
+where you need to adapt the path accordingly. Then the `intpath` variable only requires the name of the basis set, for example `intpath = integrals_H2-g4bf27`.
 
 ## Developer's documentation
 The source code documentation can be build on your local machine using
