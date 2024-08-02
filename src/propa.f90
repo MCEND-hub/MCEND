@@ -209,7 +209,7 @@ module propa
         open(newunit=efieldf,file="efield.t")
         open(newunit=fexpec,file="expec.t")
         open(newunit=fentro,file="entropy.t")
-        write(fexpec,'(A6,I3,A6,I3,A6,I3,A6,I3,A6,I3,1x,A50)')  "nel", nel, "nsz", nsz, "nrorb" , &
+        write(fexpec,'(A6,I3,A6,I3,A6,I3,A6,I3,A6,I3,1x,A120)')  "nel", nel, "nsz", nsz, "nrorb" , &
         & nrorb,"nrfrz" ,nrorb_fc, "nrspf", nrspf, intdir
         write(fexpec,formtt) "time","norm","x","y","z","R","Te","Tn","Vee","Vnn","Ven","Htot","Re(Acf)","Im(Acf)"
 
@@ -3029,7 +3029,7 @@ module propa
 
     if (flag_spinorbital == 1) then
       if (.not. mf_reduction ) then
-        !$omp do private(jr0, lr0, mu, nu) schedule(dynamic) !!!reduction(+: mf1_input)
+        !$omp do private(jr0, lr0, mu, nu) schedule(dynamic) !! reduction(+: mf1_input)
         do jr0=1,nrorb_input
           do lr0=1,nrorb_input
             do mu=1,nrprime
