@@ -27,13 +27,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4  
-      with:
-        submodules: 'recursive'
-    # - name: get submodule
-      # uses: actions/checkout@v4
-      # with: 
-        # token: ${{ secrets.GH_PAT }}
-        # repository: MCEND-hub/MCEND-library
+      # with:
+        # submodules: 'recursive'
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
