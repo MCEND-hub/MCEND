@@ -892,33 +892,61 @@ module propa
       end if    
 
       close(31)
-      close(35)
-      open(newunit=fpsi,file="finalpsi")
-      do i=1, nrindep*nrspf
-        write(fpsi,'(2(e23.16,1x))') dreal(A(i)), dimag(A(i))
-      enddo
-      do ix=1, nrprime
-        write(fpsi,form_wavee) (dreal(phi(ix,in)),in=1,nrorb), (dimag(phi(ix,in)),in=1,nrorb)
-      enddo
-      do ix=1, nrprimn
-        write(fpsi,form_waven2) (dreal(phin(ix,in)),in=1,nrspf), (dimag(phin(ix,in)),in=1,nrspf)
-      enddo
-      call flush(fpsi)
-      close(fpsi)
 
-      ! write out final density
-      open(newunit=frho,file="finalrho")
-      do i=1, 2*nrorb
-        do j=1, 2*nrorb
-          write(frho,*) i, j, dreal(rho(i,j)), dimag(rho(i,j))
+      if (flag_spinorbital == 0) then
+        close(35)
+        open(newunit=fpsi,file="finalpsi")
+        do i=1, nrindep*nrspf
+          write(fpsi,'(2(e23.16,1x))') dreal(A(i)), dimag(A(i))
         enddo
-      enddo
-      call flush(frho)
-      close(frho)
+        do ix=1, nrprime
+          write(fpsi,form_wavee) (dreal(phi(ix,in)),in=1,nrorb), (dimag(phi(ix,in)),in=1,nrorb)
+        enddo
+        do ix=1, nrprimn
+          write(fpsi,form_waven2) (dreal(phin(ix,in)),in=1,nrspf), (dimag(phin(ix,in)),in=1,nrspf)
+        enddo
+        call flush(fpsi)
+        close(fpsi)
 
-      if (allocated(irho)) deallocate(irho)
-      if (allocated(np)) deallocate(np)
-      if (allocated(np_spinorbital)) deallocate(np_spinorbital)
+
+        ! write out final density
+        open(newunit=frho,file="finalrho")
+        do i=1, 2*nrorb
+          do j=1, 2*nrorb
+            write(frho,*) i, j, dreal(rho(i,j)), dimag(rho(i,j))
+          enddo
+        enddo
+        call flush(frho)
+        close(frho)
+
+        if (allocated(irho)) deallocate(irho)
+        if (allocated(np)) deallocate(np)
+      end if
+
+
+      if (flag_spinorbital == 1) then
+
+        close(350)
+        open(newunit=fpsi_spinorbital,file="finalpsi_spinorbital")
+        do i=1, nrindep_spinorbital*nrspf
+          write(fpsi_spinorbital,'(2(e23.16,1x))') dreal(A_spinorbital(i)), dimag(A_spinorbital(i))
+        enddo
+        do ix=1, nrprime
+          write(fpsi_spinorbital,form_wavee) (dreal(phi_spinorbital(ix,in)),in=1,nrorb_spinorbital), &
+          & (dimag(phi_spinorbital(ix,in)),in=1,nrorb_spinorbital)
+        enddo
+        do ix=1, nrprimn
+          write(fpsi_spinorbital,form_waven2) (dreal(phin(ix,in)),in=1,nrspf), (dimag(phin(ix,in)),in=1,nrspf)
+        enddo
+        call flush(fpsi_spinorbital)
+        close(fpsi_spinorbital)
+
+
+        if (allocated(irho_spinorbital)) deallocate(irho_spinorbital)
+        if (allocated(np_spinorbital)) deallocate(np_spinorbital)
+
+
+      end if
 
       return
     end subroutine
