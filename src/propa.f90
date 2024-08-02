@@ -1748,10 +1748,10 @@ module propa
           !> ISOMASS change
           if (use_wcap) then
             phin2(ix,j) = phin2(ix,j) + N1*N2*phin(ix,j)/r(ix) &
-                        + r(ix)*(N2*m1 - N1*m2)*ef(3)*phin(ix,j)/(m1 + m2) + wcap(ix)*phin(ix,j)
+                        - r(ix)*(N2*m1 - N1*m2)*ef(3)*phin(ix,j)/(m1 + m2) + wcap(ix)*phin(ix,j)
           else
             phin2(ix,j) = phin2(ix,j) + N1*N2*phin(ix,j)/r(ix) &
-                        + r(ix)*(N2*m1 - N1*m2)*ef(3)*phin(ix,j)/(m1 + m2)
+                        - r(ix)*(N2*m1 - N1*m2)*ef(3)*phin(ix,j)/(m1 + m2)
           endif
         enddo
       enddo
@@ -2466,7 +2466,7 @@ module propa
             heln(i,j,1) = heln(i,j,1) + dconjg(phin3(ix,i))*phin3(ix,j)/(2.0_dp*massn)
             heln(i,j,2) = heln(i,j,2) + N1*N2*dconjg(phin(ix,i))*phin(ix,j)/r(ix)
             heln(i,j,3) = heln(i,j,3) + dconjg(phin(ix,i))*phin3(ix,j)
-            heln(i,j,5) = heln(i,j,5) + r(ix)*(N2*m1 - N1*m2)*dconjg(phin(ix,i))*phin(ix,j)/(m2 + m1)
+            heln(i,j,5) = heln(i,j,5) - r(ix)*(N2*m1 - N1*m2)*dconjg(phin(ix,i))*phin(ix,j)/(m2 + m1)
           enddo
         enddo
       enddo
