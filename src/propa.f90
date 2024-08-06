@@ -945,8 +945,9 @@ module propa
         if (allocated(irho_spinorbital)) deallocate(irho_spinorbital)
         if (allocated(np_spinorbital)) deallocate(np_spinorbital)
 
-
       end if
+
+      call backup_finalpsi()
 
       return
     end subroutine
