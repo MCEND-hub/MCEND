@@ -22,10 +22,12 @@
       complex(dp) :: Ao_input(nrindep_input*nrspf)
       complex(dp) :: phio_input(nrprime,nrorb_input)
       complex(dp) :: phino(nrprimn,nrspf)
-      complex(dp) :: enmat(nrindep_input,nrindep_input,nrprimn)
+
+     ! complex(dp) :: enmat(nrindep_input,nrindep_input,nrprimn)
       complex(dp) :: csum
       complex(dp) :: scme3(nrprimn)
       complex(dp) :: scme2
+      
       complex(dp) :: val_input(13)
       real(dp)    :: valreal_input(13)
       integer     :: is, i1s, i1r, vorz
@@ -35,6 +37,10 @@
       complex(dp) :: hel_input(nrorb_input,nrorb_input,5+nrensp), hel2_input(nrorb_input,nrorb_input,nrorb_input,nrorb_input),&
       & rho_input(nrorb_spinorbital_input,nrorb_spinorbital_input), A_input(nrindep_input*nrspf), venmatmo_input(nrorb_input, &
       & nrorb_input,nrprimn), phi_input(nrprime, nrorb_input)
+
+      complex(dp), allocatable :: enmat(:,:,:)
+
+      if (.not. allocated(enmat)) allocate(enmat(nrindep_input,nrindep_input,nrprimn))
 
       val_input(:) = c0
       valreal_input(:) = 0.0_dp
@@ -175,6 +181,8 @@
       endif
       valreal_input(12) = dreal(val_input(13))
       valreal_input(13) = aimag(val_input(13))
+
+      deallocate(enmat)
 
       return
 

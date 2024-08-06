@@ -1373,6 +1373,8 @@ module propa
       return
     end subroutine
 
+
+
     !> EOM for the A elements.
     subroutine dadt(t, lA_input, nrindep_input, detl_input, hel_input, nrorb_input, hel2_input, venmatmo_input, A_input)
       !cw> passing argument lA_input to support both spatial and spinorbital
@@ -1382,7 +1384,12 @@ module propa
       complex(dp) :: summ(nrspf,nrspf)
       complex(dp) :: lA_input(nrindep_input*nrspf)
       complex(dp) :: scme1, scme2
-      complex(dp) :: enmat(nrindep_input,nrindep_input,nrprimn)
+
+
+      complex(dp), allocatable :: enmat(:,:,:)
+
+    !  complex(dp) :: enmat(nrindep_input,nrindep_input,nrprimn)
+
       complex(dp) :: scme1mu(3), scme3(nrprimn)
       complex(dp) :: neham(nrindep_input,nrindep_input)
       real(dp) ::  ef(3), t
@@ -1393,6 +1400,9 @@ module propa
       complex(dp) :: hel_input(nrorb_input,nrorb_input,5+nrensp), hel2_input(nrorb_input,nrorb_input,nrorb_input,nrorb_input), &
       & venmatmo_input(nrorb_input, nrorb_input, nrprimn), A_input(nrindep_input*nrspf)
       real(dp) :: wtime_1, wtime_2
+
+      if (.not. allocated(enmat)) allocate(enmat(nrindep_input,nrindep_input,nrprimn))
+
 
       do idet=1,nrindep_input*nrspf
         lA_input(idet) = c0
@@ -1571,8 +1581,12 @@ module propa
         write (*,*)  'time for part3 in dadt', omp_get_wtime() - wtime_1
       end if
       wtime_1 = omp_get_wtime()
+
+      deallocate(enmat)
+
       return
     end subroutine
+
 
     !> derivative for the electronic phi (EOM)
     subroutine dphiedt(t,irho_input, nrorb_input,  phi_input, phi2_input, mf1_input)
