@@ -19,6 +19,7 @@ ${pycmd} compare_expec_v2.py expec.t-lih-cs-nofc expec.t-lih-cs-ref
 
 START_TIME=$SECONDS
 echo "***TEST: LiH acf test no frozen core"
+mv finalpsi startpsi
 ${BINDIR}/mcend LiH.acf.inp > lih-nofc.txt
 echo "closed-shell nofc time" $(($SECONDS - $START_TIME))"s"
 mv expec.t expec.t-lih-cs-acf-nofc
@@ -26,7 +27,6 @@ echo "Comparing with the reference values"
 ${pycmd} compare_expec_v2.py expec.t-lih-cs-acf-nofc expec.t-lih-cs-acf-ref
 
 echo "LiH static test closed shell frozen core"
-# different with ifx
 START_TIME=$SECONDS
 ${BINDIR}/mcend LiH.static.inp-cs > lih-cs.txt
 echo "closed-shell time" $(($SECONDS - $START_TIME))"s"
@@ -36,6 +36,7 @@ ${pycmd} compare_expec_v2.py expec.t-lih-cs expec.t-lih-cs-fc-ref
 
 START_TIME=$SECONDS
 echo "LiH acf test closed shell frozen core"
+mv finalpsi startpsi
 ${BINDIR}/mcend LiH.acf.inp-cs > lih-acf-cs.txt
 echo "acf time" $(($SECONDS - $START_TIME))"s"
 mv expec.t expec.t-lih-acf-cs
@@ -52,6 +53,7 @@ ${pycmd} compare_expec_v2.py expec.t-lih-cs expec_spinorbital.t-lih-os
 
 START_TIME=$SECONDS
 echo "LiH acf test open shell"
+mv finalpsi_spinorbital startpsi_spinorbital
 ${BINDIR}/mcend LiH.acf.inp-os > lih-acf-os.txt
 mv expec_spinorbital.t expec_spinorbital.t-lih-acf-os
 echo "open-shell time" $(($SECONDS - $START_TIME))"s"

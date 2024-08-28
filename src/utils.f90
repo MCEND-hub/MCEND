@@ -928,41 +928,6 @@ module utils
 
 
 
-  subroutine backup_finalpsi()
-    integer :: n
-    character(len=30) :: target_filename, backup_filename
-    character(len=100) :: cp_command
-  
-    logical :: exists_file
-  
-    if (flag_spinorbital == 0) then
-      target_filename = 'finalpsi'
-    end if
-    if (flag_spinorbital == 1) then
-      target_filename = 'finalpsi_spinorbital'
-    end if
-  
-    do n = 1, 255
-      if (flag_spinorbital == 0) then
-        write(backup_filename, '(a,i1)') 'finalpsi_', n
-      end if
-  
-      if (flag_spinorbital == 1) then
-        write(backup_filename, '(a,i1)') 'finalpsi_spinorbital_', n
-      end if
-                                      
-      inquire(file = backup_filename, exist = exists_file)
-    
-      if (.not. exists_file) then
-        write(cp_command, '(a,a,a,a)') 'cp ', target_filename, ' ', backup_filename
-        call system(cp_command)
-        exit
-      end if  
-    end do  
-  
-  end subroutine
-  
-
 
 
 

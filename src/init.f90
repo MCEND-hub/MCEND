@@ -1113,8 +1113,8 @@
         if (restart == 2 .or. restart == 5) then
           nnn = stri(2*nrorb)
           if (flag_spinorbital==0) then
-          write(*,*) "Restart requested - reading from finalpsi"
-            open(newunit=spsi,file="finalpsi")
+          write(*,*) "Restart requested - reading from startpsi"
+            open(newunit=spsi,file="startpsi")
             do i=1, nrindep*nrspf
               read(spsi,*) rea, ima
               A(i) = dcmplx(rea,ima)
@@ -1139,8 +1139,8 @@
             close(spsi)
 
           else if (flag_spinorbital==1) then
-          write(*,*) "Restart requested - reading from finalpsi_spinorbital"
-            open(newunit=spsi,file="finalpsi_spinorbital")
+          write(*,*) "Restart requested - reading from startpsi_spinorbital"
+            open(newunit=spsi,file="startpsi_spinorbital")
             do i=1, nrindep_spinorbital*nrspf
               read(spsi,*) rea_spinorbital, ima_spinorbital
               A_spinorbital(i) = dcmplx(rea_spinorbital,ima_spinorbital)

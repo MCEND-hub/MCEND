@@ -947,7 +947,6 @@ module propa
 
       end if
 
-      call backup_finalpsi()
 
       return
     end subroutine
