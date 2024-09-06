@@ -3,7 +3,6 @@ multiplicity = 1
 nrspf = 1
 nrorb = 3
 nrorb_fc = 0
-nrorb_fv = 0
 inigrd = 2
 restart = 2
 aucofu  = 2
