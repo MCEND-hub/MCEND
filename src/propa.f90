@@ -209,7 +209,7 @@ module propa
         open(newunit=efieldf,file="efield.t")
         open(newunit=fexpec,file="expec.t")
         open(newunit=fentro,file="entropy.t")
-        write(fexpec,'(A6,I3,A6,I3,A6,I3,A6,I3,A6,I3,1x,A50)')  "nel", nel, "nsz", nsz, "nrorb" , &
+        write(fexpec,'(A6,I3,A6,I3,A6,I3,A6,I3,A6,I3,1x,A120)')  "nel", nel, "nsz", nsz, "nrorb" , &
         & nrorb,"nrfrz" ,nrorb_fc, "nrspf", nrspf, intdir
         write(fexpec,formtt) "time","norm","x","y","z","R","Te","Tn","Vee","Vnn","Ven","Htot","Re(Acf)","Im(Acf)"
 
@@ -892,33 +892,61 @@ module propa
       end if    
 
       close(31)
-      close(35)
-      open(newunit=fpsi,file="finalpsi")
-      do i=1, nrindep*nrspf
-        write(fpsi,'(2(e23.16,1x))') dreal(A(i)), dimag(A(i))
-      enddo
-      do ix=1, nrprime
-        write(fpsi,form_wavee) (dreal(phi(ix,in)),in=1,nrorb), (dimag(phi(ix,in)),in=1,nrorb)
-      enddo
-      do ix=1, nrprimn
-        write(fpsi,form_waven2) (dreal(phin(ix,in)),in=1,nrspf), (dimag(phin(ix,in)),in=1,nrspf)
-      enddo
-      call flush(fpsi)
-      close(fpsi)
 
-      ! write out final density
-      open(newunit=frho,file="finalrho")
-      do i=1, 2*nrorb
-        do j=1, 2*nrorb
-          write(frho,*) i, j, dreal(rho(i,j)), dimag(rho(i,j))
+      if (flag_spinorbital == 0) then
+        close(35)
+        open(newunit=fpsi,file="finalpsi")
+        do i=1, nrindep*nrspf
+          write(fpsi,'(2(e23.16,1x))') dreal(A(i)), dimag(A(i))
         enddo
-      enddo
-      call flush(frho)
-      close(frho)
+        do ix=1, nrprime
+          write(fpsi,form_wavee) (dreal(phi(ix,in)),in=1,nrorb), (dimag(phi(ix,in)),in=1,nrorb)
+        enddo
+        do ix=1, nrprimn
+          write(fpsi,form_waven2) (dreal(phin(ix,in)),in=1,nrspf), (dimag(phin(ix,in)),in=1,nrspf)
+        enddo
+        call flush(fpsi)
+        close(fpsi)
 
-      if (allocated(irho)) deallocate(irho)
-      if (allocated(np)) deallocate(np)
-      if (allocated(np_spinorbital)) deallocate(np_spinorbital)
+
+        ! write out final density
+        open(newunit=frho,file="finalrho")
+        do i=1, 2*nrorb
+          do j=1, 2*nrorb
+            write(frho,*) i, j, dreal(rho(i,j)), dimag(rho(i,j))
+          enddo
+        enddo
+        call flush(frho)
+        close(frho)
+
+        if (allocated(irho)) deallocate(irho)
+        if (allocated(np)) deallocate(np)
+      end if
+
+
+      if (flag_spinorbital == 1) then
+
+        close(350)
+        open(newunit=fpsi_spinorbital,file="finalpsi_spinorbital")
+        do i=1, nrindep_spinorbital*nrspf
+          write(fpsi_spinorbital,'(2(e23.16,1x))') dreal(A_spinorbital(i)), dimag(A_spinorbital(i))
+        enddo
+        do ix=1, nrprime
+          write(fpsi_spinorbital,form_wavee) (dreal(phi_spinorbital(ix,in)),in=1,nrorb_spinorbital), &
+          & (dimag(phi_spinorbital(ix,in)),in=1,nrorb_spinorbital)
+        enddo
+        do ix=1, nrprimn
+          write(fpsi_spinorbital,form_waven2) (dreal(phin(ix,in)),in=1,nrspf), (dimag(phin(ix,in)),in=1,nrspf)
+        enddo
+        call flush(fpsi_spinorbital)
+        close(fpsi_spinorbital)
+
+
+        if (allocated(irho_spinorbital)) deallocate(irho_spinorbital)
+        if (allocated(np_spinorbital)) deallocate(np_spinorbital)
+
+      end if
+
 
       return
     end subroutine
@@ -1344,6 +1372,8 @@ module propa
       return
     end subroutine
 
+
+
     !> EOM for the A elements.
     subroutine dadt(t, lA_input, nrindep_input, detl_input, hel_input, nrorb_input, hel2_input, venmatmo_input, A_input)
       !cw> passing argument lA_input to support both spatial and spinorbital
@@ -1353,7 +1383,12 @@ module propa
       complex(dp) :: summ(nrspf,nrspf)
       complex(dp) :: lA_input(nrindep_input*nrspf)
       complex(dp) :: scme1, scme2
-      complex(dp) :: enmat(nrindep_input,nrindep_input,nrprimn)
+
+
+      complex(dp), allocatable :: enmat(:,:,:)
+
+    !  complex(dp) :: enmat(nrindep_input,nrindep_input,nrprimn)
+
       complex(dp) :: scme1mu(3), scme3(nrprimn)
       complex(dp) :: neham(nrindep_input,nrindep_input)
       real(dp) ::  ef(3), t
@@ -1364,6 +1399,9 @@ module propa
       complex(dp) :: hel_input(nrorb_input,nrorb_input,5+nrensp), hel2_input(nrorb_input,nrorb_input,nrorb_input,nrorb_input), &
       & venmatmo_input(nrorb_input, nrorb_input, nrprimn), A_input(nrindep_input*nrspf)
       real(dp) :: wtime_1, wtime_2
+
+      if (.not. allocated(enmat)) allocate(enmat(nrindep_input,nrindep_input,nrprimn))
+
 
       do idet=1,nrindep_input*nrspf
         lA_input(idet) = c0
@@ -1542,8 +1580,12 @@ module propa
         write (*,*)  'time for part3 in dadt', omp_get_wtime() - wtime_1
       end if
       wtime_1 = omp_get_wtime()
+
+      deallocate(enmat)
+
       return
     end subroutine
+
 
     !> derivative for the electronic phi (EOM)
     subroutine dphiedt(t,irho_input, nrorb_input,  phi_input, phi2_input, mf1_input)
@@ -1748,10 +1790,10 @@ module propa
           !> ISOMASS change
           if (use_wcap) then
             phin2(ix,j) = phin2(ix,j) + N1*N2*phin(ix,j)/r(ix) &
-                        + r(ix)*(N2*m1 - N1*m2)*ef(3)*phin(ix,j)/(m1 + m2) + wcap(ix)*phin(ix,j)
+                        - r(ix)*(N2*m1 - N1*m2)*ef(3)*phin(ix,j)/(m1 + m2) + wcap(ix)*phin(ix,j)
           else
             phin2(ix,j) = phin2(ix,j) + N1*N2*phin(ix,j)/r(ix) &
-                        + r(ix)*(N2*m1 - N1*m2)*ef(3)*phin(ix,j)/(m1 + m2)
+                        - r(ix)*(N2*m1 - N1*m2)*ef(3)*phin(ix,j)/(m1 + m2)
           endif
         enddo
       enddo
@@ -2466,7 +2508,7 @@ module propa
             heln(i,j,1) = heln(i,j,1) + dconjg(phin3(ix,i))*phin3(ix,j)/(2.0_dp*massn)
             heln(i,j,2) = heln(i,j,2) + N1*N2*dconjg(phin(ix,i))*phin(ix,j)/r(ix)
             heln(i,j,3) = heln(i,j,3) + dconjg(phin(ix,i))*phin3(ix,j)
-            heln(i,j,5) = heln(i,j,5) + r(ix)*(N2*m1 - N1*m2)*dconjg(phin(ix,i))*phin(ix,j)/(m2 + m1)
+            heln(i,j,5) = heln(i,j,5) - r(ix)*(N2*m1 - N1*m2)*dconjg(phin(ix,i))*phin(ix,j)/(m2 + m1)
           enddo
         enddo
       enddo
@@ -3029,7 +3071,7 @@ module propa
 
     if (flag_spinorbital == 1) then
       if (.not. mf_reduction ) then
-        !$omp do private(jr0, lr0, mu, nu) schedule(dynamic) !!!reduction(+: mf1_input)
+        !$omp do private(jr0, lr0, mu, nu) schedule(dynamic) !! reduction(+: mf1_input)
         do jr0=1,nrorb_input
           do lr0=1,nrorb_input
             do mu=1,nrprime
